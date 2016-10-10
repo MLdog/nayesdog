@@ -23,9 +23,10 @@ page_head_tpl = """
 
 def rss_feed_to_html(url):
     feed_parsed = feedparser.parse(url)
+    entries = []
     for entry in feed_parsed['entries']:
-        yield entry['content'][0]['value'].encode('utf-8')
-
+        entries.append(entry['content'][0]['value'].encode('utf-8'))
+    return entries
 # html2text.html2text(html)
 
 #   open('shit.html', 'w')
@@ -84,7 +85,7 @@ def generate_header(list_rss_feeds):
     header += "<thead>\n"
     header += "<tr class=\"header\">\n"
     for feed in list_rss_feeds:
-        header += "<th><a href=\""+feed+"\">Home</a></th>\n"
+        header += "<th><a href=\""+feed+"\">"+feed+"</a></th>\n"
     header += "</tr>\n"
     header += "</thead>\n"
     header += "</table>\n"
@@ -98,42 +99,74 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Send response status code
         self.send_response(200)
+        print self.server.cssfile
         # Send headers
         query = urlparse(self.path).query
-        cssfile = 'css.css'
-        if self.path == '/'+cssfile:
+        self.feed_chosen = self.path.split("/")[-1]
+        print self.path.split()
+        if self.path == '/'+self.server.cssfile:
             mimetype, _ = mimetypes.guess_type(self.path)
             self.send_header('Content-type', mimetype)
             self.end_headers()
-            self.wfile.write(file_to_str(cssfile))
+            self.wfile.write(file_to_str(self.server.cssfile))
         else:
+            print self.path,"!!!!!!!!!"
+            self.feed_chosen = self.path.split("/")[-1]
             self.send_header('Content-type','text/html')
-            self.end_headers()  
+            self.end_headers()
             if query != "":
                 query_components = dict(qc.split("=") for qc in query.split("&"))
             else:
                 query_components = ""
             #send message to client
-            url = "http://feeds.nature.com/NatureLatestResearch"
+            #url = "http://feeds.nature.com/NatureLatestResearch"
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
-            s = rss_feed_to_html(url)
-            for e in s:
-                self.wfile.write(e)
-                self.wfile.write(generate_like_options("caca"))
-                #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo\"value=\"upvote\">Upvote</button>\n</form>")
-                #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo2\"value=\"downvote\">Downvote</button>\n</form>")
-                self.wfile.write(str(query_components))
+            self.wfile.write(generate_header(self.server.dict_of_entries.keys()))
+            print self.feed_chosen 
+            print self.server.dict_of_entries.keys()
+            if self.feed_chosen in self.server.dict_of_entries.keys():
+                print len(self.server.dict_of_entries[self.feed_chosen])
+                for e in self.server.dict_of_entries[self.feed_chosen]:
+                    self.wfile.write(e)
+                    self.wfile.write(generate_like_options("a"))
+                    self.wfile.write(str(query_components))
             self.wfile.write('</body>\n</html>')
         return
-#?hifeiz=ezfqz&jdosvod=efzzefez                                                                                                                         
+#?hifeiz=ezfqz&jdosvod=efzzefez                                                                             
+
+
+class HTTPServerFeeds(HTTPServer):
+    def __init__(self,
+                 server_address,
+                 testHTTPServer_RequestHandler,
+                 cssfile,
+                 feeds_url_dict):
+        HTTPServer.__init__(self,server_address,testHTTPServer_RequestHandler)
+        self.cssfile = cssfile
+        self.feeds_url_dict = feeds_url_dict
+        self.generate_list_of_entries_per_feed()
+
+    def generate_list_of_entries_per_feed(self):
+        self.dict_of_entries = {}
+        for feed in self.feeds_url_dict:
+            self.dict_of_entries[feed] = rss_feed_to_html(self.feeds_url_dict[feed])
+
+
+
 def run():
     print('starting server...')
     # Server settings
     # Choose port 8080, for port 80, which is normally used for a http
     # server, you need root access
     server_address = ('127.0.0.1', 8081)
-    httpd = HTTPServer(server_address, testHTTPServer_RequestHandler)
+    cssfile = 'css.css'
+    feeds_url_dict = {'nature':'http://feeds.nature.com/NatureLatestResearch',
+                      'arstecnica':'http://feeds.arstechnica.com/arstechnica/science'}
+    httpd = HTTPServerFeeds(server_address,
+                            testHTTPServer_RequestHandler,
+                            cssfile,
+                            feeds_url_dict)
     print('running server...')
     httpd.serve_forever()
 
