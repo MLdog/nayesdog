@@ -66,6 +66,31 @@ def generate_like_options(var_name):
     button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
     return button_html_code
 
+
+def generate_header(list_rss_feeds):
+    """
+    Generate HTML code to create the header of the webpage interface.
+    The header contains a menu with all the different RSS feeds received.
+    :param list_rss_feeds: List of RSS feeds titles
+    :type list_rss_feeds: List
+    :returns: HTML code to generate a header for the webpage interface 
+    :rtype: String 
+    """
+    nb_feeds = len(list_rss_feeds)
+    header = "<header>\n"
+    header += "<table align=\"center\">\n"
+    for i in xrange(nb_feeds):
+        header += "<col width="+str(100/nb_feeds)+"%>\n"
+    header += "<thead>\n"
+    header += "<tr class=\"header\">\n"
+    for feed in list_rss_feeds:
+        header += "<th><a href=\""+feed+"\">Home</a></th>\n"
+    header += "</tr>\n"
+    header += "</thead>\n"
+    header += "</table>\n"
+    header += "</header>\n"
+    header += "<hr>\n"
+    return header
 #!/usr/bin/python3
 # HTTPRequestHandler class
 class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
