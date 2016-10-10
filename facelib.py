@@ -67,7 +67,7 @@ def generate_like_options(var_name):
     return button_html_code
 
 
-zodef generate_header(list_rss_feeds):
+def generate_header(list_rss_feeds):
     """
     Generate HTML code to create the header of the webpage interface.
     The header contains a menu with all the different RSS feeds received.
