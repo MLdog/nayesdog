@@ -102,6 +102,10 @@ def rating_from_md_file(mdfile):
         https://arstechnica.com/?p=972521
     After edit:
         https://arstechnica.com/?p=972521 0
+    :param mdfile: Full path to markdown file
+    :type mdfile: string
+    :returns: Dict with ids of feeds as keys and ratings as values
+    :rtype: dict
     """
     mds = file_to_str(mdfile).split('\n\n-------------\n\n')
     id_rating = map(
@@ -116,6 +120,14 @@ def rating_from_md_file(mdfile):
 
 
 def rating_from_md_files_in_folder(mdfolder):
+    """Extract ratings from .md files in mdfolder. Applies rating_from_md_file
+    to each file in mdfolder.
+    :param mdfolder: Path to folder
+    :type mdfolder: string
+    :returns: Dict with ids of feeds as keys and ratings as values (combined
+    for all files)
+    :rtype: dict
+    """
     mdfiles = list(filter(lambda s: s[0] != '.' and s[-3:] == '.md', os.listdir(mdfolder)))
     fullpaths = map(lambda x: os.path.join(mdfolder, x), mdfiles)
     items_combined = sum(map(lambda x: list(rating_from_md_file(x).items()), fullpaths), [])
