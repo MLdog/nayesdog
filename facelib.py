@@ -4,6 +4,21 @@ import re
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from  urlparse import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
+
+page_head_tpl = """
+<!DOCTYPE html><html><head>
+  <meta charset="utf-8">
+  <meta name="generator" content="hands">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>News</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="/css.css">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+"""
+
 def rss_feed_to_html(url):
     feed_parsed = feedparser.parse(url)
     for entry in feed_parsed['entries']:
@@ -66,6 +81,8 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
             query_components = ""
         #send message to client
         url = "http://feeds.nature.com/NatureLatestResearch"
+        self.wfile.write(page_head_tpl)
+        self.wfile.write('<body>')
         s = rss_feed_to_html(url)
         for e in s:
             self.wfile.write(e)
@@ -73,6 +90,7 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
             #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo\"value=\"upvote\">Upvote</button>\n</form>")
             #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo2\"value=\"downvote\">Downvote</button>\n</form>")
             self.wfile.write(str(query_components))
+        self.wfile.write('</body>\n</html>')
         return
 #?hifeiz=ezfqz&jdosvod=efzzefez                                                                                                                         
 def run():
