@@ -3,6 +3,8 @@ import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from  urlparse import urlparse
+from doglib import file_to_str
+import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 
 page_head_tpl = """
@@ -72,25 +74,32 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         # Send response status code
         self.send_response(200)
         # Send headers
-        self.send_header('Content-type','text/html')
-        self.end_headers()  
         query = urlparse(self.path).query
-        if query != "":
-            query_components = dict(qc.split("=") for qc in query.split("&"))
+        cssfile = 'css.css'
+        if self.path == '/'+cssfile:
+            mimetype, _ = mimetypes.guess_type(self.path)
+            self.send_header('Content-type', mimetype)
+            self.end_headers()
+            self.wfile.write(file_to_str(cssfile))
         else:
-            query_components = ""
-        #send message to client
-        url = "http://feeds.nature.com/NatureLatestResearch"
-        self.wfile.write(page_head_tpl)
-        self.wfile.write('<body>')
-        s = rss_feed_to_html(url)
-        for e in s:
-            self.wfile.write(e)
-            self.wfile.write(generate_like_options("caca"))
-            #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo\"value=\"upvote\">Upvote</button>\n</form>")
-            #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo2\"value=\"downvote\">Downvote</button>\n</form>")
-            self.wfile.write(str(query_components))
-        self.wfile.write('</body>\n</html>')
+            self.send_header('Content-type','text/html')
+            self.end_headers()  
+            if query != "":
+                query_components = dict(qc.split("=") for qc in query.split("&"))
+            else:
+                query_components = ""
+            #send message to client
+            url = "http://feeds.nature.com/NatureLatestResearch"
+            self.wfile.write(page_head_tpl)
+            self.wfile.write('<body>')
+            s = rss_feed_to_html(url)
+            for e in s:
+                self.wfile.write(e)
+                self.wfile.write(generate_like_options("caca"))
+                #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo\"value=\"upvote\">Upvote</button>\n</form>")
+                #self.wfile.write("<form action=\"\" method=\"get\">\n<button name=\"foo2\"value=\"downvote\">Downvote</button>\n</form>")
+                self.wfile.write(str(query_components))
+            self.wfile.write('</body>\n</html>')
         return
 #?hifeiz=ezfqz&jdosvod=efzzefez                                                                                                                         
 def run():
