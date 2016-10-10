@@ -27,13 +27,6 @@ def rss_feed_to_html(url):
     for entry in feed_parsed['entries']:
         entries.append(entry['content'][0]['value'].encode('utf-8'))
     return entries
-# html2text.html2text(html)
-
-#   open('shit.html', 'w')
-#    with open('shit.html', 'a') as f:
-#        for ss in s:
-#            f.write(ss)
-
 
 def generate_radio(var_name, value, txt):
     """
@@ -92,25 +85,22 @@ def generate_header(list_rss_feeds):
     header += "</header>\n"
     header += "<hr>\n"
     return header
-#!/usr/bin/python3
-# HTTPRequestHandler class
-class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
+
+
+class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
     # GET
     def do_GET(self):
         # Send response status code
         self.send_response(200)
-        print self.server.cssfile
         # Send headers
         query = urlparse(self.path).query
         self.feed_chosen = self.path.split("/")[-1]
-        print self.path.split()
         if self.path == '/'+self.server.cssfile:
             mimetype, _ = mimetypes.guess_type(self.path)
             self.send_header('Content-type', mimetype)
             self.end_headers()
             self.wfile.write(file_to_str(self.server.cssfile))
         else:
-            print self.path,"!!!!!!!!!"
             self.feed_chosen = self.path.split("/")[-1]
             self.send_header('Content-type','text/html')
             self.end_headers()
@@ -119,35 +109,49 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
             else:
                 query_components = ""
             #send message to client
-            #url = "http://feeds.nature.com/NatureLatestResearch"
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
             self.wfile.write(generate_header(self.server.dict_of_entries.keys()))
-            print self.feed_chosen 
-            print self.server.dict_of_entries.keys()
             if self.feed_chosen in self.server.dict_of_entries.keys():
-                print len(self.server.dict_of_entries[self.feed_chosen])
                 for e in self.server.dict_of_entries[self.feed_chosen]:
                     self.wfile.write(e)
                     self.wfile.write(generate_like_options("a"))
                     self.wfile.write(str(query_components))
             self.wfile.write('</body>\n</html>')
         return
-#?hifeiz=ezfqz&jdosvod=efzzefez                                                                             
 
 
 class HTTPServerFeeds(HTTPServer):
     def __init__(self,
                  server_address,
-                 testHTTPServer_RequestHandler,
+                 HTTPServer_RequestHandler,
                  cssfile,
                  feeds_url_dict):
-        HTTPServer.__init__(self,server_address,testHTTPServer_RequestHandler)
+        """
+        Generates an instance for HTTPServerFeeds that inheritates from
+        HTTPServer class.
+        :param server_address: Server adress, paramater required by HTTPServer.
+        :param HTTPServer_RequestHandler: HTTPServer_RequestHandler required by
+        HTTPServer.
+        :param cssfile: CSS file.
+        :param feeds_url_dict: Dictionnary with feed urls and names.
+        :type server_address: Tuple.
+        :type HTTPServer_RequestHandler: HTTPServer_RequestHandler class.
+        :type cssfile: String.
+        :type feeds_url_dict: Dict.
+        """
+        HTTPServer.__init__(self,server_address,HTTPServer_RequestHandler)
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
         self.generate_list_of_entries_per_feed()
 
     def generate_list_of_entries_per_feed(self):
+        """
+        Generates a list of entries per feed in HTML format ready to output for
+        each feed. Each feed cna be accessed through its keys. Creates a new
+        attribute dict_of_entries, which is a dictionnary with feeds names as
+        keys and lists of entries as values.
+        """
         self.dict_of_entries = {}
         for feed in self.feeds_url_dict:
             self.dict_of_entries[feed] = rss_feed_to_html(self.feeds_url_dict[feed])
@@ -156,15 +160,12 @@ class HTTPServerFeeds(HTTPServer):
 
 def run():
     print('starting server...')
-    # Server settings
-    # Choose port 8080, for port 80, which is normally used for a http
-    # server, you need root access
     server_address = ('127.0.0.1', 8081)
     cssfile = 'css.css'
     feeds_url_dict = {'nature':'http://feeds.nature.com/NatureLatestResearch',
                       'arstecnica':'http://feeds.arstechnica.com/arstechnica/science'}
     httpd = HTTPServerFeeds(server_address,
-                            testHTTPServer_RequestHandler,
+                            HTTPServer_RequestHandler_feeds,
                             cssfile,
                             feeds_url_dict)
     print('running server...')
