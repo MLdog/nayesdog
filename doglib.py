@@ -58,8 +58,6 @@ def to_readable_md(e):
 
 
 def feed_to_md_file(d, fpath):
-    #mds = [s for s in map(to_readable_md, d['entries']) if s != '']
-    mds = filter(lambda s: s != '', map(to_readable_md, d['entries']))
     """
     Converts each entry of RSS feed parsed into readable Strings in markdown
     format and writes them in a file.
@@ -68,6 +66,8 @@ def feed_to_md_file(d, fpath):
     :type d: dict
     :type fpath: string
     """
+    #mds = [s for s in map(to_readable_md, d['entries']) if s != '']
+    mds = filter(lambda s: s != '', map(to_readable_md, d['entries']))
     mds = list(filter(lambda s: s != '', map(to_readable_md, d['entries'])))
     md = '\n\n-------------\n\n'.join(mds)
     md = '# ' + d['feed']['title'] + '\n\n' + re.sub('([#]+)', r'\1#', md)
