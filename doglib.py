@@ -3,6 +3,7 @@ import time
 import os
 import gzip # to save/laod
 from collections import OrderedDict
+from naylib import create_empty_word_count_table
 
 
 
@@ -22,18 +23,14 @@ def load_object_simple(filename):
     return eval(s)
 
 
-def load_wt_st(wt_file, st_file):
-    if os.path.isfile(wt_file):
-        word_counts = load_object_simple(wt_file)
+def load_wt_st(db_file):
+    if os.path.isfile(db_file):
+        return load_object_simple(db_file)
     else:
-        word_counts = create_empty_word_count_table()
-
-    if os.path.isfile(st_file):
-        sum_dict = load_object_simple(st_file)
-    else:
-        sum_dict = {0:0, 1:0}
-
-    return word_counts, sum_dict
+        return {
+                'wt': create_empty_word_count_table(),
+                'st': {0:0, 1:0}
+               }
 
 
 def file_to_str(filepath):
@@ -196,7 +193,7 @@ def process_an_entry(e):
             map(
                 lambda s:
                     nopunctuation(
-                        notags(s).replace('\n', '').replace('\xa0', ' ')
+                        notags(s).replace('\n', ' ').replace('\xa0', ' ')
                     ).strip().lower().split(' ')
                 ,
                 [
