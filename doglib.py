@@ -9,6 +9,19 @@ def file_to_str(filepath):
     return s
 
 
+def simplify_html(s):
+    s = re.sub('style="[^"]+"', '', s)
+    s = re.sub('height="[^"]+"', '', s)
+    s = re.sub('width="[^"]+"', '', s)
+    # remove unnecessary tags
+    for tag in ['div', 'span']:
+        s = re.sub('<{tag}[^>]*>'.format(tag=tag), '', s)
+        s = re.sub('</{tag}[^>]*>'.format(tag=tag), '', s)
+    # those are not present in XML, right?
+    #for tag in ['script', 'noscript']:
+    #    s = re.compile('<{tag}[^>]*>[^<]+</{tag}>'.format(tag=tag), flags=re.MULTILINE).sub('', s)
+    return s
+
 def notags(s):
     """
     Remove tags from HTML piece of code
