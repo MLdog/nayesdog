@@ -193,7 +193,7 @@ def process_an_entry(e):
             map(
                 lambda s:
                     nopunctuation(
-                        notags(s).replace('\n', ' ').replace('\xa0', ' ')
+                        notags(s).replace('\n', ' ').replace(u'\xa0', ' ')
                     ).strip().lower().split(' ')
                 ,
                 [
