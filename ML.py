@@ -1,67 +1,50 @@
 import feedparser
 import os
-from collections import OrderedDict
+from naylib import update_word_count_tables
+from doglib import save_object_simple, load_object_simple, load_wt_st
 
-from doglib import feed_to_md_file, process_an_entry, file_to_str, rating_from_md_files_in_folder
+
+from doglib import feed_to_md_file, process_an_entry, file_to_str,\
+rating_from_md_files_in_folder, transform_feed_dict
+
 
 # ML
 
 path = '/home/ilya/feeds/'
+
+stopwordsfile = './stopwords.txt'
+
+# "databases"
+wt_file = './wt.py.gz'
+st_file = './st.py.gz'
+
+mdpath=os.path.join(path, 'md')
+# insted of obtaining labels all at once from MD files. With web inteface labels and entries
+# will be obtained at the same time in the moment user presses a button
+# this will give us a new item in d_idstxts and lables at the same time
+labels = rating_from_md_files_in_folder(mdpath) # load labels from mdfile
+
+word_counts, sum_dict = load_wt_st(wt_file, st_file)
+#print(load_object_simple(wt_file))
+
+stopwords=set(file_to_str(stopwordsfile).split('\n'))
+
 files = list(filter(lambda s: s[0] != '.', os.listdir(path)))
-fname = files[0]
-fullpath = os.path.join(path, fname)
+fullpaths = list(map(lambda f: os.path.join(path, f), files))
 
-#d = feedparser.parse('http://feeds.arstechnica.com/arstechnica/index?format=xml')
+for fullpath in fullpaths:
+    d = feedparser.parse(fullpath)
+    d_idstxts = transform_feed_dict(d)
+    update_word_count_tables(word_counts, sum_dict, d_idstxts, labels, stopwords)
 
-d = feedparser.parse(fullpath)
+save_object_simple(wt_file, word_counts)
+save_object_simple(st_file, sum_dict)
 
-print(d['feed']['title'])
+# test ML
+# pick up a feed and pretend its new
+newone = list(d_idstxts.values())[0]
 
-# load simplified entries
-entries = list(map(process_an_entry, d['entries']))
-# get ids
-ids = [e['id'] for e in entries]
-
-# throw away timestamps and ids
-for e in entries:
-    e.pop('timestamp')
-    e.pop('id')
-
-
-# title and text are combined
-txts = list(map(
-                lambda e: sum(e.values(), [])
-                ,
-                entries
-               )
-           )
-
-
-labels = rating_from_md_files_in_folder(os.path.join(path, 'md')) # load from some where
-
-
-d_idstxts = dict(zip(ids, txts))
-
-stopwords = set(file_to_str('./stopwords.txt').split('\n'))
-
-def create_empty_word_count_table():
-    return {
-        0:OrderedDict(),
-        1:OrderedDict()
-    }
-
-# init tables
-word_counts = create_empty_word_count_table()
-sum_dict = {0:0, 1:0}
-
-for k in d_idstxts.keys():
-    if k in labels.keys():
-        for word in d_idstxts[k]:
-            if word not in stopwords:
-                if word in word_counts[labels[k]].keys():
-                    word_counts[labels[k]][word] += 1
-                    sum_dict[labels[k]] += 1
-                else:
-                    word_counts[labels[k]][word] = 0
-
-
+for w in newone:
+    Py = 
+    Px = 
+    Pxy = word_counts[label][w]/sum_dict[label]

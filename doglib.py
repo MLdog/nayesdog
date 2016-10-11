@@ -1,6 +1,39 @@
 import re
 import time
 import os
+import gzip # to save/laod
+from collections import OrderedDict
+
+
+
+# two dumb simple save/load in transparent format
+def save_object_simple(outfilename, obj):
+    s = repr(obj)
+    #with open(outfilename, 'w') as f:
+    with gzip.open(outfilename, 'wb') as f:
+        f.write(s.encode())
+
+
+# OrderedDict has to be defined, otherwise EVAL won't load it from file
+def load_object_simple(filename):
+    #with open(filename, 'r') as f:
+    with gzip.open(filename, 'rb') as f:
+        s = f.read()
+    return eval(s)
+
+
+def load_wt_st(wt_file, st_file):
+    if os.path.isfile(wt_file):
+        word_counts = load_object_simple(wt_file)
+    else:
+        word_counts = create_empty_word_count_table()
+
+    if os.path.isfile(st_file):
+        sum_dict = load_object_simple(st_file)
+    else:
+        sum_dict = {0:0, 1:0}
+
+    return word_counts, sum_dict
 
 
 def file_to_str(filepath):
@@ -185,3 +218,32 @@ def process_an_entry(e):
     if 'authors' in e.keys():
         l['authors'] = list(map(lambda x: x['name'], e['authors']))
     return l
+
+
+def transform_feed_dict(d):
+    # load simplified entries
+    entries = list(map(process_an_entry, d['entries']))
+    # get ids
+    ids = [e['id'] for e in entries]
+
+    # throw away timestamps and ids
+    for e in entries:
+        e.pop('timestamp')
+        e.pop('id')
+
+
+    # title and text combined
+    txts = map(
+                lambda e: 
+                    list(filter(
+                        lambda s: s != '', # if content is absent
+                        sum(e.values(), [])
+                    ))
+                ,
+                entries
+              )
+
+#    txts = list(txts)
+
+    return dict(zip(ids, txts))
+
