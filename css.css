@@ -5,6 +5,8 @@ body{
     font-size:18px;
     color:#444;
     padding:0 10px
+    text-justify: inter-word;
+    text-align: justify;
 }
 
 img {max-width:600px;}
