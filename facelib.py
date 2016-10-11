@@ -54,9 +54,9 @@ def generate_like_options(var_name):
     :rtype: String.
     """
     button_html_code = "<form action=\"\" method=\"get\">\n"
-    button_html_code += generate_radio(var_name, "like", "Like")
-    button_html_code += generate_radio(var_name, "dislike", "Dislike")
-    button_html_code += generate_radio(var_name, "ignore", "Ignore")
+    button_html_code += generate_radio(var_name, "Like", "Like")
+    button_html_code += generate_radio(var_name, "Dislike", "Dislike")
+    button_html_code += generate_radio(var_name, "Ignore", "Ignore")
     button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
     return button_html_code
 
@@ -89,34 +89,95 @@ def generate_header(list_rss_feeds):
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
     # GET
+    def extract_chosen_feed_from_path(self):
+        """
+        Extract the desired RSS feed from the path
+        :returns: Chosen feed.
+        :rtype: String.
+        """
+        feed_chosen = self.path.split("/")[-1]
+        feed_chosen = feed_chosen.split("?")[0]
+        return feed_chosen
+
+    def extract_query_components(self):
+        """ 
+        Extract the query components from path
+        :returns: Query components.
+        :rtype: Dict.
+        """
+        query = urlparse(self.path).query
+        if query != "":
+            return  dict(query_components.split("=") for query_components in query.split("&"))
+        else:
+            return {}
+
+    def update_preference_feed_menus_from_submission(self):
+        """
+        Sends rated entries to its corresponding location in preference menu
+        (i.e. Liked entries to Like location, Unliked to Unlike ...)
+        """
+        query_components = self.extract_query_components()
+        for component in query_components:
+            print query_components
+            preference = query_components[component]
+            entry_information = self.extract_data_from_id_entry(component)
+            feed_name = entry_information["feed"]
+            index = entry_information["index"]
+            entry = self.server.dict_of_entries[feed_name].pop(index)
+            self.server.preference_menu[preference].append(entry)
+
+    def generate_id_entry(self,feed_name,index):
+        """
+        Generate ID entry for preference button
+        :returns: Entry ID
+        :rtype: String
+        """
+        return feed_name+"_"+str(index)
+
+    def extract_data_from_id_entry(self,entry):
+        """
+        Extracts information from the ID of an entry
+        :param entry: Entry ID
+        :returns: Information of the given entry, i.e., entry feed name and
+        entry index
+        :rtype: Dict.
+        """
+        entry_split = entry.split("_")
+        return {"feed": entry_split[0], "index": int(entry_split[1])}
+
     def do_GET(self):
         # Send response status code
         self.send_response(200)
         # Send headers
-        query = urlparse(self.path).query
-        self.feed_chosen = self.path.split("/")[-1]
+        self.feed_chosen = self.extract_chosen_feed_from_path()
         if self.path == '/'+self.server.cssfile:
             mimetype, _ = mimetypes.guess_type(self.path)
             self.send_header('Content-type', mimetype)
             self.end_headers()
             self.wfile.write(file_to_str(self.server.cssfile))
         else:
-            self.feed_chosen = self.path.split("/")[-1]
-            self.send_header('Content-type','text/html')
+            query_components = self.extract_query_components()
+            self.update_preference_feed_menus_from_submission()
+            self.feed_chosen = self.extract_chosen_feed_from_path()
+            self.send_header('Content-type', 'text/html')
             self.end_headers()
-            if query != "":
-                query_components = dict(qc.split("=") for qc in query.split("&"))
-            else:
-                query_components = ""
             #send message to client
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
+            self.wfile.write(generate_header(self.server.preference_menu.keys()))
             self.wfile.write(generate_header(self.server.dict_of_entries.keys()))
             if self.feed_chosen in self.server.dict_of_entries.keys():
-                for e in self.server.dict_of_entries[self.feed_chosen]:
+                for i,e in enumerate(self.server.dict_of_entries[self.feed_chosen]):
+                    id_entry = self.generate_id_entry(self.feed_chosen,i)
                     self.wfile.write(e)
-                    self.wfile.write(generate_like_options("a"))
+                    self.wfile.write(generate_like_options(id_entry))
                     self.wfile.write(str(query_components))
+
+            if self.feed_chosen in self.server.preference_menu.keys():
+                for i,e in enumerate(self.server.preference_menu[self.feed_chosen]):
+                    id_entry = self.generate_id_entry(self.feed_chosen,i)
+                    self.wfile.write(e)
+
             self.wfile.write('</body>\n</html>')
         return
 
@@ -143,6 +204,7 @@ class HTTPServerFeeds(HTTPServer):
         HTTPServer.__init__(self,server_address,HTTPServer_RequestHandler)
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
+        self.preference_menu = {"Like": [],"Dislike": [],"Ignore": [],"Home": []}
         self.generate_list_of_entries_per_feed()
 
     def generate_list_of_entries_per_feed(self):
