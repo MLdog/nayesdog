@@ -7,7 +7,7 @@ from doglib import file_to_str
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 import time
-
+import shelve
 
 page_head_tpl = """
 <!DOCTYPE html><html><head>
@@ -23,8 +23,10 @@ page_head_tpl = """
 </head>
 """
 
+
 def generate_entry_id(id_entry):
-    return re.sub('[^a-zA-Z0-9]+','',id_entry)
+    return re.sub('[^a-zA-Z0-9]+', '', id_entry)
+
 
 def preprocess_rss_feed(url):
     feed_parsed = feedparser.parse(url)
@@ -41,12 +43,13 @@ def preprocess_rss_feed(url):
         if "author" in entry:
             entry_dic["author"] = entry["authors"]
         if "id" in entry.keys():
-            entries[generate_entry_id(entry["id"])]=entry_dic                     
+            entries[generate_entry_id(entry["id"])] = entry_dic
     return entries
+
 
 def represent_rss_entry(entry):
     return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+entry["content"]
-    
+
 
 def generate_radio(var_name, value, txt):
     """
@@ -83,7 +86,7 @@ def generate_like_options(var_name):
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
     # GET
-    def generate_header(self,list_rss_feeds):
+    def generate_header(self, list_rss_feeds):
         """
         Generate HTML code to create the header of the webpage interface.
         The header contains a menu with all the different RSS feeds received.
@@ -130,7 +133,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         query = urlparse(self.path).query
         if query != "":
-            return  dict(query_components.split("=") for query_components in query.split("&"))
+            return dict(query_components.split("=") for query_components in query.split("&"))
         else:
             return {}
 
@@ -145,13 +148,15 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
-            entry = self.server.preference_menu["Home"][feed_name].pop(index)
-            if feed_name not in self.server.preference_menu[preference].keys():
-                self.server.preference_menu[preference][feed_name] = {}
-            self.server.preference_menu[preference][feed_name][index] = entry
+            session_dict =shelve.open(self.server.previous_session,writeback=True)
+            entry = session_dict["preferences"]["Home"][feed_name].pop(index)
+            if feed_name not in session_dict["preferences"][preference]:
+                session_dict["preferences"][preference][feed_name] = {}
+            session_dict["preferences"][preference][feed_name][index] = entry
+            session_dict.close()
             # self.smartdog.fit()
 
-    def generate_id_entry(self,feed_name,index):
+    def generate_id_entry(self, feed_name, index):
         """
         Generate ID entry for preference button
         :returns: Entry ID
@@ -159,7 +164,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         return feed_name+"_"+index
 
-    def extract_data_from_id_entry(self,entry):
+    def extract_data_from_id_entry(self, entry):
         """
         Extracts information from the ID of an entry
         :param entry: Entry ID
@@ -168,8 +173,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :rtype: Dict.
         """
         entry_split = entry.split("_")
-        print entry
-        print entry_split
         return {"feed": entry_split[0], "index": entry_split[1]}
 
     def generate_entry_separator(self):
@@ -177,12 +180,14 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def update_feed_or_preference_folder(self):
         folder = self.extract_chosen_feed_from_path()
-        if folder in self.server.preference_menu.keys():
+        session_dict = shelve.open(self.server.previous_session)
+        if folder in session_dict["preferences"].keys():
             self.server.current_preference_folder = folder
             self.server.feed_chosen = ""
         elif folder in self.server.feeds_url_dict.keys():
             self.server.feed_chosen = folder
-                
+        session_dict.close()
+
     def do_GET(self):
         self.send_response(200)
         if self.path == '/'+self.server.cssfile:
@@ -198,18 +203,20 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
             # Generate preferences menu
-            preference_menu_keys = self.server.preference_menu.keys()
+            session_dict = shelve.open(self.server.previous_session)
+            preference_menu_keys = session_dict["preferences"].keys()
             preference_menu = self.generate_header(preference_menu_keys)
             self.wfile.write(preference_menu)
             # Generate feeds menu in the current preference menu
             current_preference = self.server.current_preference_folder
-            dict_feeds = self.server.preference_menu[current_preference]
+            dict_feeds = session_dict["preferences"][current_preference]
             feeds_menu_keys = dict_feeds.keys()
             feeds_menu = self.generate_header(feeds_menu_keys)
             self.wfile.write(feeds_menu)
+            session_dict.close()
             # Represent each entry
             feed_chosen = self.server.feed_chosen
-            if self.server.feed_chosen in dict_feeds.keys():
+            if self.server.feed_chosen in feeds_menu_keys:
                 for key, entry in dict_feeds[feed_chosen].iteritems():
                     id_entry = self.generate_id_entry(feed_chosen, key)
                     self.wfile.write(represent_rss_entry(entry))
@@ -225,7 +232,8 @@ class HTTPServerFeeds(HTTPServer):
                  server_address,
                  HTTPServer_RequestHandler,
                  cssfile,
-                 feeds_url_dict):
+                 feeds_url_dict,
+                 previous_session=".previous_session"):
         """
         Generates an instance for HTTPServerFeeds that inheritates from
         HTTPServer class.
@@ -239,28 +247,35 @@ class HTTPServerFeeds(HTTPServer):
         :type cssfile: String.
         :type feeds_url_dict: Dict.
         """
-        HTTPServer.__init__(self,server_address,HTTPServer_RequestHandler)
+        HTTPServer.__init__(self, server_address, HTTPServer_RequestHandler)
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
-        self.preference_menu = {"Like": {},
-                                "Dislike": {},
-                                "Home": self.generate_list_of_entries_per_feed()}
+        self.previous_session = previous_session
         self.current_preference_folder = "Home"
         self.feed_chosen = ""
+        self.update_session()
 
-    def generate_list_of_entries_per_feed(self):
-        """
-        Generates a list of entries per feed in HTML format ready to output for
-        each feed. Each feed cna be accessed through its keys. Creates a new
-        attribute dict_of_entries, which is a dictionnary with feeds names as
-        keys and lists of entries as values.
-        :returns: dictionnary of entries in HTML format
-        :rtype: Dict.
-        """
-        dict_of_entries = {}
+    def update_session(self):
+        session_dict = shelve.open(self.previous_session, writeback=True)
+        if "preferences" not in session_dict:
+            session_dict["preferences"] = {}
+        if "seen_entries_keys" not in session_dict:
+            session_dict["seen_entries_keys"] = []
+        if "Like" not in session_dict["preferences"]:
+            session_dict["preferences"]["Like"] = {}
+        if "Dislike" not in session_dict["preferences"]:
+            session_dict["preferences"]["Dislike"] = {}
+        if "Home" not in session_dict["preferences"]:
+            session_dict["preferences"]["Home"] = {}
         for feed in self.feeds_url_dict:
-            dict_of_entries[feed] = preprocess_rss_feed(self.feeds_url_dict[feed])
-        return dict_of_entries
+            received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
+            for key, entry in received_entries.iteritems():
+                if key not in session_dict["seen_entries_keys"]:
+                    if feed not in session_dict["preferences"]["Home"]:
+                        session_dict["preferences"]["Home"][feed] = {}
+                    session_dict["preferences"]["Home"][feed][key] = entry
+                    session_dict["seen_entries_keys"].append(key)
+        session_dict.close()
 
 
 def run():
