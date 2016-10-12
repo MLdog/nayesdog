@@ -61,34 +61,37 @@ def generate_like_options(var_name):
     return button_html_code
 
 
-def generate_header(list_rss_feeds):
-    """
-    Generate HTML code to create the header of the webpage interface.
-    The header contains a menu with all the different RSS feeds received.
-    :param list_rss_feeds: List of RSS feeds titles
-    :type list_rss_feeds: List
-    :returns: HTML code to generate a header for the webpage interface 
-    :rtype: String 
-    """
-    nb_feeds = len(list_rss_feeds)
-    header = "<header>\n"
-    header += "<table align=\"center\">\n"
-    for i in xrange(nb_feeds):
-        header += "<col width="+str(100/nb_feeds)+"%>\n"
-    header += "<thead>\n"
-    header += "<tr class=\"header\">\n"
-    for feed in list_rss_feeds:
-        header += "<th><a href=\""+feed+"\">"+feed+"</a></th>\n"
-    header += "</tr>\n"
-    header += "</thead>\n"
-    header += "</table>\n"
-    header += "</header>\n"
-    header += "<hr>\n"
-    return header
-
-
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
     # GET
+    def generate_header(self,list_rss_feeds):
+        """
+        Generate HTML code to create the header of the webpage interface.
+        The header contains a menu with all the different RSS feeds received.
+        :param list_rss_feeds: List of RSS feeds titles
+        :type list_rss_feeds: List
+        :returns: HTML code to generate a header for the webpage interface 
+        :rtype: String 
+        """
+        nb_feeds = len(list_rss_feeds)
+        header = "<header>\n"
+        header += "<table align=\"center\">\n"
+        for i in xrange(nb_feeds):
+            header += "<col width="+str(100/nb_feeds)+"%>\n"
+        header += "<thead>\n"
+        header += "<tr class=\"header\">\n"
+        for feed in list_rss_feeds:
+            if feed == self.server.current_preference_folder or feed == self.server.feed_chosen:
+                header += "<th><a href=\""+feed+"\"style=\"color:rgb(0,0,0)\"><fontcolor=\"black\">"+feed+"</font></a></th>\n"
+            else:
+                header += "<th><a href=\""+feed+"\">"+feed+"</a></th>\n"
+        header += "</tr>\n"
+        header += "</thead>\n"
+        header += "</table>\n"
+        header += "</header>\n"
+        header += "<hr>\n"
+        return header
+
+
     def extract_chosen_feed_from_path(self):
         """
         Extract the desired RSS feed from the path
@@ -174,8 +177,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             #send message to client
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
-            self.wfile.write(generate_header(self.server.preference_menu.keys()))
-            self.wfile.write(generate_header(self.server.preference_menu[self.server.current_preference_folder].keys()))
+            self.wfile.write(self.generate_header(self.server.preference_menu.keys()))
+            self.wfile.write(self.generate_header(self.server.preference_menu[self.server.current_preference_folder].keys()))
             if self.server.feed_chosen in self.server.preference_menu[self.server.current_preference_folder].keys():
                 for i,e in enumerate(self.server.preference_menu[self.server.current_preference_folder][self.server.feed_chosen]):
                     id_entry = self.generate_id_entry(self.server.feed_chosen,i)
