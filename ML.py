@@ -1,6 +1,7 @@
 import feedparser
 import os
-from naylib import update_word_count_tables, classify_new_one
+from naylib import update_word_count_tables
+from naylib import classify_new_one_log, classify_new_one
 from doglib import save_object_simple, load_wt_st
 
 
@@ -13,10 +14,20 @@ def dargmax(d, vmax0=-1):
     for k,v in d.items():
         if v > vmax:
             vmax = v
-    return k
+            kmax = k
+    return kmax
 
 def classnamer(k):
     return {0:"dislike", 1:"like"}.get(k, "dont know if you like")
+
+
+def print_sorted(d, indent=0, s="  "):
+    for k in sorted(d.keys()):
+        print("{}{}".format(s*indent, k))
+        if type(d[k]) == dict:
+            print_sorted(d[k], indent=indent+1)
+        else:
+            print("{}{}".format(s*(indent+1), d[k]))
 
 
 # ML
@@ -51,14 +62,29 @@ save_object_simple(db_file, {'wt': word_counts, 'st': sum_dict})
 
 # test ML
 # pick up a feed and pretend its new
-newone = list(d_idstxts.values())[0]
+newone = list(transform_feed_dict(feedparser.parse('/home/ilya/feeds/Ars_Technica')).values())[0]
+
+print(newone)
 
 # P(y|x) = P(y)P(x1,..,xn|y) / P(x1,..,xn) =
 # = P(y) {P(x1|y)*...*P(xn|y)} / {P(x1)*...*P(xn)}
+
+print("\n\n noLOG \n")
 
 Ps = classify_new_one(word_counts, sum_dict, newone)
 Pyx = Ps['yx']
 k = dargmax(Pyx)
 
 print("You will probably {} it with probability = {}".format(classnamer(k), Pyx[k]))
-print(Ps)
+            
+print_sorted(Ps)
+
+
+print("\n\n LOG \n")
+
+Ps = classify_new_one_log(word_counts, sum_dict, newone)
+Pyx = Ps['yx']
+k = dargmax(Pyx)
+
+print("You will probably {} it with probability = {}".format(classnamer(k), Pyx[k]))
+print_sorted(Ps)
