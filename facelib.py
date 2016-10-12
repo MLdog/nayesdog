@@ -48,7 +48,7 @@ def preprocess_rss_feed(url):
 
 
 def represent_rss_entry(entry):
-    return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+entry["content"]
+    return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+simplify_html(entry["content"])
 
 
 def generate_radio(var_name, value, txt):
