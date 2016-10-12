@@ -26,3 +26,11 @@ bash prep_feeds.sh
 
 check folders:
 ~/feeds/ and ~/feeds/md/
+
+## To-do
+
+* Figure out why running ML.py with:
+  rm db.py.gz && python ML.py\
+  gives different results depending on python 2.7 or 3\
+* Why log and nolog versions of classify_new_one give different results?
+

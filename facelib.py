@@ -3,7 +3,7 @@ import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from  urlparse import urlparse
-from doglib import file_to_str
+from doglib import file_to_str, simplify_html
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 import time
