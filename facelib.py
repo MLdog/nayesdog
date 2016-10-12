@@ -41,7 +41,7 @@ def generate_radio(var_name, value, txt):
     :rtype: String.
     """
     s = "<input type=\"radio\" name=\""+var_name
-    s += "\" value=\""+value+"\">"+txt+"<br>\n"
+    s += "\" value=\""+value+"\">"+txt+"\n"
     return s
 
 
@@ -150,6 +150,9 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         entry_split = entry.split("_")
         return {"feed": entry_split[0], "index": int(entry_split[1])}
 
+    def generate_entry_separator(self):
+        return "<br>\n<hr>\n"
+
     def update_feed_or_preference_folder(self):
         folder = self.extract_chosen_feed_from_path()
         if folder in self.server.preference_menu.keys():
@@ -157,8 +160,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.server.feed_chosen = ""
         elif folder in self.server.feeds_url_dict.keys():
             self.server.feed_chosen = folder
-            
-    
+                
     def do_GET(self):
         # Send response status code
         self.send_response(200)
@@ -185,6 +187,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     self.wfile.write(e)
                     if self.server.current_preference_folder == "Home":
                         self.wfile.write(generate_like_options(id_entry))
+                    self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
         return
 
