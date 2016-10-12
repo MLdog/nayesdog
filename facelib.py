@@ -3,7 +3,7 @@ import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from  urlparse import urlparse
-from doglib import file_to_str
+from doglib import file_to_str, simplify_html
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 
@@ -25,7 +25,11 @@ def rss_feed_to_html(url):
     feed_parsed = feedparser.parse(url)
     entries = []
     for entry in feed_parsed['entries']:
-        entries.append(entry['content'][0]['value'].encode('utf-8'))
+        entries.append(
+            simplify_html(
+                entry['content'][0]['value'].encode('utf-8')
+            )
+        )
     return entries
 
 def generate_radio(var_name, value, txt):
