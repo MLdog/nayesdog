@@ -6,6 +6,8 @@ from  urlparse import urlparse
 from doglib import file_to_str
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
+import time
+
 
 page_head_tpl = """
 <!DOCTYPE html><html><head>
@@ -21,12 +23,30 @@ page_head_tpl = """
 </head>
 """
 
-def rss_feed_to_html(url):
+def generate_entry_id(id_entry):
+    return re.sub('[^a-zA-Z0-9]+','',id_entry)
+
+def preprocess_rss_feed(url):
     feed_parsed = feedparser.parse(url)
-    entries = []
+    entries = {}
     for entry in feed_parsed['entries']:
-        entries.append(entry['content'][0]['value'].encode('utf-8'))
+        entry_dic = {"title": "",
+                     "content": "",
+                     "author": "",
+                     "time": str(time.time())}
+        if "title" in entry:
+            entry_dic["title"] = entry["title"].encode('utf-8')
+        if "content" in entry:
+            entry_dic["content"] = entry["content"][0]["value"].encode('utf-8')
+        if "author" in entry:
+            entry_dic["author"] = entry["authors"]
+        if "id" in entry.keys():
+            entries[generate_entry_id(entry["id"])]=entry_dic                     
     return entries
+
+def represent_rss_entry(entry):
+    return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+entry["content"]
+    
 
 def generate_radio(var_name, value, txt):
     """
@@ -121,15 +141,15 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         query_components = self.extract_query_components()
         for component in query_components:
-            print query_components
             preference = query_components[component]
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
             entry = self.server.preference_menu["Home"][feed_name].pop(index)
             if feed_name not in self.server.preference_menu[preference].keys():
-                self.server.preference_menu[preference][feed_name] = []    
-            self.server.preference_menu[preference][feed_name].append(entry)
+                self.server.preference_menu[preference][feed_name] = {}
+            self.server.preference_menu[preference][feed_name][index] = entry
+            # self.smartdog.fit()
 
     def generate_id_entry(self,feed_name,index):
         """
@@ -137,7 +157,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: Entry ID
         :rtype: String
         """
-        return feed_name+"_"+str(index)
+        return feed_name+"_"+index
 
     def extract_data_from_id_entry(self,entry):
         """
@@ -148,7 +168,9 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :rtype: Dict.
         """
         entry_split = entry.split("_")
-        return {"feed": entry_split[0], "index": int(entry_split[1])}
+        print entry
+        print entry_split
+        return {"feed": entry_split[0], "index": entry_split[1]}
 
     def generate_entry_separator(self):
         return "<br>\n<hr>\n"
@@ -162,9 +184,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.server.feed_chosen = folder
                 
     def do_GET(self):
-        # Send response status code
         self.send_response(200)
-        # Send headers
         if self.path == '/'+self.server.cssfile:
             mimetype, _ = mimetypes.guess_type(self.path)
             self.send_header('Content-type', mimetype)
@@ -172,19 +192,27 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.wfile.write(file_to_str(self.server.cssfile))
         else:
             self.update_feed_or_preference_folder()
-            query_components = self.extract_query_components()
             self.update_preference_feed_menus_from_submission()
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            #send message to client
             self.wfile.write(page_head_tpl)
             self.wfile.write('<body>')
-            self.wfile.write(self.generate_header(self.server.preference_menu.keys()))
-            self.wfile.write(self.generate_header(self.server.preference_menu[self.server.current_preference_folder].keys()))
-            if self.server.feed_chosen in self.server.preference_menu[self.server.current_preference_folder].keys():
-                for i,e in enumerate(self.server.preference_menu[self.server.current_preference_folder][self.server.feed_chosen]):
-                    id_entry = self.generate_id_entry(self.server.feed_chosen,i)
-                    self.wfile.write(e)
+            # Generate preferences menu
+            preference_menu_keys = self.server.preference_menu.keys()
+            preference_menu = self.generate_header(preference_menu_keys)
+            self.wfile.write(preference_menu)
+            # Generate feeds menu in the current preference menu
+            current_preference = self.server.current_preference_folder
+            dict_feeds = self.server.preference_menu[current_preference]
+            feeds_menu_keys = dict_feeds.keys()
+            feeds_menu = self.generate_header(feeds_menu_keys)
+            self.wfile.write(feeds_menu)
+            # Represent each entry
+            feed_chosen = self.server.feed_chosen
+            if self.server.feed_chosen in dict_feeds.keys():
+                for key, entry in dict_feeds[feed_chosen].iteritems():
+                    id_entry = self.generate_id_entry(feed_chosen, key)
+                    self.wfile.write(represent_rss_entry(entry))
                     if self.server.current_preference_folder == "Home":
                         self.wfile.write(generate_like_options(id_entry))
                     self.wfile.write(self.generate_entry_separator())
@@ -231,7 +259,7 @@ class HTTPServerFeeds(HTTPServer):
         """
         dict_of_entries = {}
         for feed in self.feeds_url_dict:
-            dict_of_entries[feed] = rss_feed_to_html(self.feeds_url_dict[feed])
+            dict_of_entries[feed] = preprocess_rss_feed(self.feeds_url_dict[feed])
         return dict_of_entries
 
 
