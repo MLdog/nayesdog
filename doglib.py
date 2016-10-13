@@ -220,6 +220,7 @@ def process_an_entry(e):
 def transform_feed_dict(d):
     # load simplified entries
     entries = list(map(process_an_entry, d['entries']))
+
     # get ids
     ids = [e['id'] for e in entries]
 

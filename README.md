@@ -29,8 +29,9 @@ check folders:
 
 ## To-do
 
-* Figure out why running ML.py with:
-  rm db.py.gz && python ML.py\
-  gives different results depending on python 2.7 or 3\
 * Why log and nolog versions of classify_new_one give different results?
+* Modify word_counts dict word_counts[0] and word_counts[1] contain the same keys
+* wrap transform_feed_dict and update_word_count_tables as one sklearn-like FIT function
+* Add any to-do we discussed but didn't put here.
+* We can also havo common syncthing folder for extra stuff
 

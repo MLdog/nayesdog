@@ -1,9 +1,12 @@
 from collections import OrderedDict
 from math import log, exp as mexp
-EPS = 1e-6
+EPS = 1e-10
+constPx = 1e-3
+
 
 def exp(x):
-    return mexp(x) if x<100 else mexp(100)
+    return mexp(x) if x<200 else mexp(200)
+
 
 def create_empty_word_count_table():
     return {
@@ -29,29 +32,30 @@ def update_word_count_tables(
                     else:
                         word_counts[labels[k]][word] = 0
 
+
 def classify_new_one(word_counts, sum_dict, words):
     Ps = dict(
         y=dict(),
-        x=1.0,
         yx=dict(),
         Pixy=dict()
     )
+    Ps['x'] = constPx
     sum_dict = {k:float(v) for k,v in sum_dict.items()} # to let division work in python2.7
     total = sum(sum_dict.values())
 
     # estimate Px. It migh be better to just fix it to >0 <1
-    tn = 1.0
-    for w in words:
+    # tn = 1.0
+    # for w in words:
 
-        wc = 0.0 # word conut across labels
-        for label in word_counts.keys():
-            if w in word_counts[label]:
-                wc += word_counts[label][w]
+    #     wc = 0.0 # word conut across labels
+    #     for label in word_counts.keys():
+    #         if w in word_counts[label]:
+    #             wc += word_counts[label][w]
 
-        if wc != 0: # otherwise no real info so do not update
-            Ps['x'] *= wc # assuming independence
-            tn *= total
-    Ps['x'] /= tn
+    #     if wc != 0: # otherwise no real info so do not update
+    #         Ps['x'] *= wc # assuming independence
+    #         tn *= total
+    # Ps['x'] /= tn
 
     for label in word_counts.keys():
 
@@ -66,49 +70,75 @@ def classify_new_one(word_counts, sum_dict, words):
 
         Ps['y'][label] = sum_dict[label] / total
 
-        if Ps['x'] != 0.0:
-            Ps['yx'][label] = Ps['y'][label] * Ps['Pixy'][label] / Ps['x']
-        else:
-            Ps['yx'][label] = None
+        Ps['yx'][label] = Ps['y'][label] * Ps['Pixy'][label] / Ps['x']
 
     return Ps
+
 
 def classify_new_one_log(word_counts, sum_dict, words):
     # First Ps are logP, they they are P
     Ps = dict(
         y=dict(),
-        x=0.0,
         yx=dict(),
         Pixy=dict()
     )
+    Ps['x'] = log( constPx )
+
     sum_dict = {k:float(v) for k,v in sum_dict.items()} # to let division work in python2.7
     total = sum(sum_dict.values())
 
     # estimate Px. It migh be better to just fix it to >0 <1
-    for w in words:
+    #for w in words:
 
-        wc = 0.0 # word conut across labels
-        for label in word_counts.keys():
-            if w in word_counts[label]:
-                wc += word_counts[label][w]
+    #    wc = 0.0 # word conut across labels
+    #    for label in word_counts.keys():
+    #        if w in word_counts[label]:
+    #            wc += word_counts[label][w]
 
-        Ps['x'] += log( EPS + wc / total ) # assuming independence 
+    #    Ps['x'] += log( EPS + wc ) - log ( EPS + total ) # assuming independence 
 
     for label in word_counts.keys():
 
         Ps['Pixy'][label] = 0.0
         for w in words:
             if w in word_counts[label]:
-                Ps['Pixy'][label] += log( EPS + word_counts[label][w] / sum_dict[label] )
+                Ps['Pixy'][label] += log( EPS + word_counts[label][w] ) - log( EPS + sum_dict[label] )
 
-        Ps['y'][label] = log( EPS + sum_dict[label] / total )
+        Ps['y'][label] = log( EPS + sum_dict[label] ) - log ( EPS + total )
 
         Ps['yx'][label] = Ps['y'][label] + Ps['Pixy'][label] - Ps['x']
 
     # convert logP to P
-    Ps['x'] = exp(Ps['x'])
+    Ps['x'] = exp( Ps['x'] )
     for key in ['y', 'yx', 'Pixy']:
         Ps[key] = {k:exp(v) for k,v in Ps[key].items()}
 
     return Ps
 
+
+def classify_new_one_optimized(word_counts, sum_dict, words):
+    Ps = dict(
+        y=dict(),
+        yx=dict(),
+        Pixy=dict()
+    )
+    Ps['x'] = constPx
+    sum_dict = {k:float(v) for k,v in sum_dict.items()} # to let division work in python2.7
+    total = sum(sum_dict.values())
+
+    for label in word_counts.keys():
+
+        Pixy_numerator = 1.0
+        Pixy_denominator = 1.0
+        for w in words:
+            if w in word_counts[label]:
+                Pixy_numerator *= word_counts[label][w]
+                Pixy_denominator *= sum_dict[label]
+        
+        Ps['Pixy'][label] = Pixy_numerator / Pixy_denominator
+
+        Ps['y'][label] = sum_dict[label] / total
+
+        Ps['yx'][label] = ( sum_dict[label]*Pixy_numerator ) / ( Ps['x'] * total * Pixy_denominator )
+
+    return Ps
