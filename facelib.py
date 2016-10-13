@@ -23,7 +23,7 @@ page_head_tpl = """
 </head>
 """
 
-
+import os
 def generate_entry_id(id_entry):
     return re.sub('[^a-zA-Z0-9]+', '', id_entry)
 
@@ -51,6 +51,7 @@ def represent_rss_entry(entry):
     return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+simplify_html(entry["content"])
 
 
+# old version of like-dislike
 def generate_radio(var_name, value, txt):
     """
     Generate HTML code to create a radio
@@ -67,6 +68,11 @@ def generate_radio(var_name, value, txt):
     s += "\" value=\""+value+"\">"+txt+"\n"
     return s
 
+def generate_submite_bouton(var_name, value, image_path):
+    s = "<input type=\"image\" name=\""+var_name+"\" "
+    s += "value=\""+value+"\" "
+    s += "src=\""+image_path+"\"> \n"
+    return s
 
 def generate_like_options(var_name):
     """
@@ -77,10 +83,17 @@ def generate_like_options(var_name):
     :rtype: String.
     """
     button_html_code = "<form action=\"\" method=\"get\">\n"
-    button_html_code += generate_radio(var_name, "Like", "Like")
-    button_html_code += generate_radio(var_name, "Dislike", "Dislike")
+    button_html_code += generate_submite_bouton(var_name,
+                                                "Like",
+                                                "/icons/like.png")
+    button_html_code += generate_submite_bouton(var_name,
+                                                "Dislike",
+                                                "/icons/dislike.png")
+    button_html_code += "</form>\n"
+    #button_html_code += generate_radio(var_name, "Like", "Like")
+    #button_html_code += generate_radio(var_name, "Dislike", "Dislike")
     #button_html_code += generate_radio(var_name, "Ignore", "Ignore")
-    button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
+    #button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
     return button_html_code
 
 
@@ -143,7 +156,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         (i.e. Liked entries to Like location, Unliked to Unlike ...)
         """
         query_components = self.extract_query_components()
-        for component in query_components:
+        if query_components.keys():
+            component = query_components.keys()[0].split(".")[0]
             preference = query_components[component]
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
@@ -154,7 +168,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 session_dict["preferences"][preference][feed_name] = {}
             session_dict["preferences"][preference][feed_name][index] = entry
             session_dict.close()
-            # self.smartdog.fit()
+        # self.smartdog.fit()
 
     def generate_id_entry(self, feed_name, index):
         """
@@ -190,11 +204,20 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(200)
+        
+        #import pdb; pdb.set_trace()
+        mimetype, _ = mimetypes.guess_type(self.path)
         if self.path == '/'+self.server.cssfile:
-            mimetype, _ = mimetypes.guess_type(self.path)
             self.send_header('Content-type', mimetype)
             self.end_headers()
             self.wfile.write(file_to_str(self.server.cssfile))
+        elif mimetype is not None and "image" in mimetype:
+            imfile = self.path[1:] if self.path[0] == "/" else self.path
+            imfile = os.path.join(os.getcwd(), imfile)
+            if os.path.isfile(imfile):
+                self.send_header('Content-type', mimetype)
+                self.end_headers()
+                self.wfile.write(file_to_str(imfile))
         else:
             self.update_feed_or_preference_folder()
             self.update_preference_feed_menus_from_submission()
