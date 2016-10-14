@@ -8,7 +8,7 @@ import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 import time
 import shelve
-
+import os
 page_head_tpl = """
 <!DOCTYPE html><html><head>
   <meta charset="utf-8">
@@ -23,7 +23,6 @@ page_head_tpl = """
 </head>
 """
 
-import os
 def generate_entry_id(id_entry):
     return re.sub('[^a-zA-Z0-9]+', '', id_entry)
 
@@ -94,6 +93,17 @@ def generate_like_options(var_name):
     #button_html_code += generate_radio(var_name, "Dislike", "Dislike")
     #button_html_code += generate_radio(var_name, "Ignore", "Ignore")
     #button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
+    return button_html_code
+
+def generate_save_delete_option(var_name):
+    button_html_code = "<form action=\"\" method=\"get\">\n"
+    button_html_code += generate_submite_bouton(var_name,
+                                                "Save",
+                                                "/icons/save.png")
+    button_html_code += generate_submite_bouton(var_name,
+                                                "Delete",
+                                                "/icons/delete.png")
+    button_html_code += "</form>\n"
     return button_html_code
 
 
@@ -245,6 +255,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     self.wfile.write(represent_rss_entry(entry))
                     if self.server.current_preference_folder == "Home":
                         self.wfile.write(generate_like_options(id_entry))
+                    else:
+                        self.wfile.write(generate_save_delete_option(id_entry))
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
         return
