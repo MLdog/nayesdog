@@ -36,22 +36,29 @@ def preprocess_rss_feed(url):
                      "author": "",
                      "time": str(time.time())}
         if "title" in entry:
-            entry_dic["title"] = entry["title"].encode('utf-8')
+            entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
         if "content" in entry:
-            entry_dic["content"] = entry["content"][0]["value"].encode('utf-8')
+            entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
         if "author" in entry:
-            entry_dic["author"] = entry["authors"]
+            entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
         if "id" in entry.keys():
             entries[generate_entry_id(entry["id"])] = entry_dic
     return entries
 
 
 def represent_rss_entry(entry):
-    return "<p><b>"+entry["title"]+"<br>"+"</p></b>"+simplify_html(entry["content"])
-
-
+    s = "<div class=\"entry\">\n"
+    if "title" in entry:
+        s += "<span class=\"title\">"+entry["title"]+"</span>\n"
+    if "author" in entry:
+        authors = ", ".join(entry["authors"])
+        s += "<span class=\"authors\">"+authors+"</span>\n"
+    if "content" in entry:
+        s += "<span class=\"content\">"+entry["content"]+"</span>\n" 
+    s += "</div>\n"
+    return s
 # old version of like-dislike
-def generate_radio(var_name, value, txt):
+def generate_radio(var_name, value, txtzo):
     """
     Generate HTML code to create a radio
     :param var_name: Variable name.
@@ -73,27 +80,57 @@ def generate_submite_bouton(var_name, value, image_path):
     s += "src=\""+image_path+"\"> \n"
     return s
 
-def generate_like_options(var_name):
-    """
-    Generate HTML code to create  radio and submit button for Like/Dislike/Ignore options.
-    :param var_name: Variable name. 
-    :type var_name: String.
-    :returns: HTML code to generate radio and submit button
-    :rtype: String.
-    """
-    button_html_code = "<form action=\"\" method=\"get\">\n"
-    button_html_code += generate_submite_bouton(var_name,
-                                                "Like",
-                                                "/icons/like.png")
-    button_html_code += generate_submite_bouton(var_name,
-                                                "Dislike",
-                                                "/icons/dislike.png")
-    button_html_code += "</form>\n"
-    #button_html_code += generate_radio(var_name, "Like", "Like")
-    #button_html_code += generate_radio(var_name, "Dislike", "Dislike")
-    #button_html_code += generate_radio(var_name, "Ignore", "Ignore")
-    #button_html_code += "<input type=\"submit\" value=\"Submit\">\n</form>\n"
-    return button_html_code
+
+def to_form(element,action="\"\"", method="\"get\""):
+    s = "<form action="+action+" method="+method+">\n"
+    s += element
+    s += "</form>\n"
+    return s
+
+def to_div(div, element):
+    s = "<div class=\""+div+"\">\n"
+    s += element
+    s += "</div>\n"
+    return s
+
+def to_span(span, element):
+    s = "<span class=\""+span+"\">\n"
+    s += element
+    s += "</span>\n"
+    return s
+
+def generate_link(href, name):
+    s = "<a href=\""+href+"\">\n"
+    s += name+"\n"
+    s += "</a>\n"
+    return s
+
+def generate_html_table_column(element):
+    s = "<th>\n"
+    s += element
+    s += "</th>\n"
+    return s
+
+def generate_html_table_row(element):
+    s = "<tr>\n"
+    s += element
+    s += "</tr>\n"
+    return s
+
+def generate_html_table(element):
+    s = "<table>\n"
+    s += element
+    s += "</table>\n"
+    return s
+
+def generate_html_header(element):
+    s = "<header>\n"
+    s += element
+    s += "</header>\n"
+    return s
+
+def generate_horizontal_rule():
+    return "<hr>\n"
 
 def generate_save_delete_option(var_name):
     button_html_code = "<form action=\"\" method=\"get\">\n"
@@ -119,24 +156,45 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :rtype: String 
         """
         nb_feeds = len(list_rss_feeds)
-        header = "<header>\n"
-        header += "<table align=\"center\">\n"
-        for i in xrange(nb_feeds):
-            header += "<col width="+str(100/nb_feeds)+"%>\n"
-        header += "<thead>\n"
-        header += "<tr class=\"header\">\n"
+        html_table_row = ""
         for feed in list_rss_feeds:
+            menu_element = generate_link(feed, feed)
             if feed == self.server.current_preference_folder or feed == self.server.feed_chosen:
-                header += "<th><a href=\""+feed+"\"style=\"color:rgb(0,0,0)\"><fontcolor=\"black\">"+feed+"</font></a></th>\n"
+                menu_element = to_span("selected_link", menu_element)
             else:
-                header += "<th><a href=\""+feed+"\">"+feed+"</a></th>\n"
-        header += "</tr>\n"
-        header += "</thead>\n"
-        header += "</table>\n"
-        header += "</header>\n"
-        header += "<hr>\n"
-        return header
+                menu_element = to_span("unselected_link", menu_element)
+            html_table_column = generate_html_table_column(menu_element)
+            html_table_column = to_span("menu_column_table",html_table_column)
+            html_table_row += html_table_column 
+        html_table_row = to_span("menu_row_table", html_table_row)
+        menu = generate_html_table_row(html_table_row)
+        menu = generate_html_table(menu)
+        menu = to_div("menu_bar",menu)
+        menu += to_span("menu_bar_separator",generate_horizontal_rule())
+        return menu
 
+    def generate_like_options(self,var_name):
+        """
+        Generate HTML code to create  radio and submit button for 
+        Like/Dislike/Ignore options.
+        :param self: self
+        :param var_name: Variable name.
+        :type var_name: String.
+        :returns: HTML code to generate radio and submit button
+        :rtype: String.
+        """
+        s = to_span("submit_button",
+                    generate_submite_bouton(var_name,
+                                            "Like",
+                                            "/icons/like.png"))
+        s += to_span("submit_button",
+                     generate_submite_bouton(var_name,
+                                             "Dislike",
+                                             "/icons/dislike.png"))
+                     
+        s = to_form(s)
+        s = to_div("submit_bar",s)
+        return s
 
     def extract_chosen_feed_from_path(self):
         """
@@ -211,8 +269,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         return {"feed": entry_split[0], "index": entry_split[1]}
 
     def generate_entry_separator(self):
-        return "<br>\n<hr>\n"
-
+        return to_span("entries_separator","<br>\n<hr>\n")
+         
     def update_feed_or_preference_folder(self):
         folder = self.extract_chosen_feed_from_path()
         session_dict = shelve.open(self.server.previous_session)
@@ -265,7 +323,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     id_entry = self.generate_id_entry(feed_chosen, key)
                     self.wfile.write(represent_rss_entry(entry))
                     if self.server.current_preference_folder == "Home":
-                        self.wfile.write(generate_like_options(id_entry))
+                        self.wfile.write(self.generate_like_options(id_entry))
                     else:
                         self.wfile.write(generate_save_delete_option(id_entry))
                     self.wfile.write(self.generate_entry_separator())
