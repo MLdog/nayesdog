@@ -173,11 +173,22 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             feed_name = entry_information["feed"]
             index = entry_information["index"]
             session_dict =shelve.open(self.server.previous_session,writeback=True)
-            entry = session_dict["preferences"]["Home"][feed_name].pop(index)
-            if feed_name not in session_dict["preferences"][preference]:
-                session_dict["preferences"][preference][feed_name] = {}
-            session_dict["preferences"][preference][feed_name][index] = entry
-            session_dict.close()
+            print feed_name,self.server.current_preference_folder
+            if preference in ["Like", "Dislike"]:
+                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                if feed_name not in session_dict["preferences"][preference]:
+                    session_dict["preferences"][preference][feed_name] = {}
+                session_dict["preferences"][preference][feed_name][index] = entry
+                session_dict.close()
+            if preference in ["Delete"]:
+                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+            if preference in ["Save"]:
+                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
+                file_save = open(feed_name+"_saved_entries.html","a")
+                file_save.write(represent_rss_entry(entry))
+                file_save.write(self.generate_entry_separator())
+                file_save.close()
+
         # self.smartdog.fit()
 
     def generate_id_entry(self, feed_name, index):
