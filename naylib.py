@@ -1,8 +1,6 @@
 from collections import OrderedDict
 from math import log, exp as mexp
-EPS = 1e-10
-constPx = 1e-3
-
+from doglib import save_object_simple, load_object_simple
 
 def exp(x):
     return mexp(x) if x<200 else mexp(200)
@@ -142,3 +140,21 @@ def classify_new_one_optimized(word_counts, sum_dict, words):
         Ps['yx'][label] = ( sum_dict[label]*Pixy_numerator ) / ( Ps['x'] * total * Pixy_denominator )
 
     return Ps
+
+
+class NaiveBayes:
+
+    EPS = 1e-10
+    constPx = 1e-3
+
+    def __init__(self, db_file):
+        if os.path.isfile(db_file):
+            self.table = load_object_simple(db_file)
+        else:
+            self.table = {
+                'wt': create_empty_word_count_table(),
+                'st': {0:0, 1:0}
+            }
+
+
+

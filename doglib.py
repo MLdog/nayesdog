@@ -1,36 +1,5 @@
 import re
 import time
-import os
-import gzip # to save/laod
-from collections import OrderedDict
-from naylib import create_empty_word_count_table
-
-
-
-# two dumb simple save/load in transparent format
-def save_object_simple(outfilename, obj):
-    s = repr(obj)
-    #with open(outfilename, 'w') as f:
-    with gzip.open(outfilename, 'wb') as f:
-        f.write(s.encode())
-
-
-# OrderedDict has to be defined, otherwise EVAL won't load it from file
-def load_object_simple(filename):
-    #with open(filename, 'r') as f:
-    with gzip.open(filename, 'rb') as f:
-        s = f.read()
-    return eval(s)
-
-
-def load_wt_st(db_file):
-    if os.path.isfile(db_file):
-        return load_object_simple(db_file)
-    else:
-        return {
-                'wt': create_empty_word_count_table(),
-                'st': {0:0, 1:0}
-               }
 
 
 def file_to_str(filepath):
@@ -228,7 +197,6 @@ def transform_feed_dict(d):
     for e in entries:
         e.pop('timestamp')
         e.pop('id')
-
 
     # title and text combined
     txts = map(
