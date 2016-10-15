@@ -39,24 +39,18 @@ def preprocess_rss_feed(url):
             entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
         if "content" in entry:
             entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
+        elif "summary" in entry:
+            entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
+        else:
+            print entry.keys()
         if "author" in entry:
             entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
+        if "link" in entry:
+            entry_dic["link"] = entry["link"].encode('utf-8')
         if "id" in entry.keys():
             entries[generate_entry_id(entry["id"])] = entry_dic
     return entries
 
-
-def represent_rss_entry(entry):
-    s = "<div class=\"entry\">\n"
-    if "title" in entry:
-        s += "<span class=\"title\">"+entry["title"]+"</span>\n"
-    if "author" in entry:
-        authors = ", ".join(entry["authors"])
-        s += "<span class=\"authors\">"+authors+"</span>\n"
-    if "content" in entry:
-        s += "<span class=\"content\">"+entry["content"]+"</span>\n" 
-    s += "</div>\n"
-    return s
 # old version of like-dislike
 def generate_radio(var_name, value, txtzo):
     """
@@ -73,6 +67,7 @@ def generate_radio(var_name, value, txtzo):
     s = "<input type=\"radio\" name=\""+var_name
     s += "\" value=\""+value+"\">"+txt+"\n"
     return s
+
 
 def generate_submite_bouton(var_name, value, image_path):
     s = "<input type=\"image\" name=\""+var_name+"\" "
@@ -132,6 +127,27 @@ def generate_html_header(element):
 def generate_horizontal_rule():
     return "<hr>\n"
 
+def to_body(element):
+    s = '<body>\n'
+    s += element
+    s += '</body>\n'
+    return s
+
+def represent_rss_entry(entry):
+    s = ""
+    if "title" in entry:
+        if "link" in entry:
+            s += to_span("title",generate_link(entry["link"],entry["title"]))
+        else:
+            s += to_span("title",entry["title"])
+    if "authors" in entry:
+        authors = ", ".join(entry["authors"])
+        s += to_span("authors",", ".join(entry["authors"]))
+    if "content" in entry:
+        s += to_span("content",entry["content"])
+    s = to_div("entry",s)
+    return s
+
 def generate_save_delete_option(var_name):
     button_html_code = "<form action=\"\" method=\"get\">\n"
     button_html_code += generate_submite_bouton(var_name,
@@ -145,7 +161,7 @@ def generate_save_delete_option(var_name):
 
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
-    # GET
+    
     def generate_header(self, list_rss_feeds):
         """
         Generate HTML code to create the header of the webpage interface.
@@ -232,12 +248,16 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             index = entry_information["index"]
             session_dict =shelve.open(self.server.previous_session,writeback=True)
             print feed_name,self.server.current_preference_folder
-            if preference in ["Like", "Dislike"]:
+            if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if feed_name not in session_dict["preferences"][preference]:
                     session_dict["preferences"][preference][feed_name] = {}
                 session_dict["preferences"][preference][feed_name][index] = entry
+                # train dog here
                 session_dict.close()
+            if preference == "Dislike":
+                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                # train dog here
             if preference in ["Delete"]:
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference in ["Save"]:
@@ -269,8 +289,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         return {"feed": entry_split[0], "index": entry_split[1]}
 
     def generate_entry_separator(self):
-        return to_span("entries_separator","<br>\n<hr>\n")
-         
+        return to_span("entries_separator", "<br>\n<hr>\n")
+
     def update_feed_or_preference_folder(self):
         folder = self.extract_chosen_feed_from_path()
         session_dict = shelve.open(self.server.previous_session)
@@ -283,8 +303,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(200)
-        
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         mimetype, _ = mimetypes.guess_type(self.path)
         if self.path == '/'+self.server.cssfile:
             self.send_header('Content-type', mimetype)
@@ -367,8 +386,8 @@ class HTTPServerFeeds(HTTPServer):
             session_dict["seen_entries_keys"] = []
         if "Like" not in session_dict["preferences"]:
             session_dict["preferences"]["Like"] = {}
-        if "Dislike" not in session_dict["preferences"]:
-            session_dict["preferences"]["Dislike"] = {}
+        # if "Dislike" not in session_dict["preferences"]:
+        #    session_dict["preferences"]["Dislike"] = {}
         if "Home" not in session_dict["preferences"]:
             session_dict["preferences"]["Home"] = {}
         for feed in self.feeds_url_dict:
@@ -383,11 +402,7 @@ class HTTPServerFeeds(HTTPServer):
 
 
 def run():
-    print('starting server...')
-    server_address = ('127.0.0.1', 8081)
-    cssfile = 'css.css'
-    feeds_url_dict = {'nature':'http://feeds.nature.com/NatureLatestResearch',
-                      'arstecnica':'http://feeds.arstechnica.com/arstechnica/science'}
+    from config import server_address, cssfile, feeds_url_dict
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
