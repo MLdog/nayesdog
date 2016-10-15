@@ -42,4 +42,4 @@ check folders:
 * change facelib.py so
     - instead of styling in it, it is done in css
     - each news item is div with id, so then in CSS we can style it (e.g. with box-shadow property so it looks like http://blog.srvthe.net/. Refs: http://www.cssmatic.com/box-shadow http://www.w3schools.com/cssref/css3_pr_box-shadow.asp)
-
+* figure out how to keep norm to 1.0 for p(y|x)

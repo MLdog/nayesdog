@@ -22,7 +22,7 @@ Usage example:
 
 import os
 import gzip # to save/laod
-from collections import OrderedDict
+from collections import OrderedDict # has to be here even that it is not used in code
 
 
 # two dumb simple save/load in transparent format
