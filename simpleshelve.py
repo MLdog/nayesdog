@@ -43,8 +43,9 @@ def load_object_simple(filename):
 
 class SimpleShelve:
 
-    def __init__(self, db_file):
+    def __init__(self, db_file, write_on_destroy=False):
         self.filepath = db_file
+        self.write_on_destroy = write_on_destroy
         if os.path.isfile(self.filepath):
             self.data = load_object_simple(self.filepath)
         else:
@@ -53,11 +54,12 @@ class SimpleShelve:
     def sync(self):
         save_object_simple(self.filepath, self.data)
 
-    def close(self):
+    def close(self, sync=True):
         if self.dict is None:
             return
         try:
-            self.sync()
+            if sync:
+                self.sync()
             try:
                 self.data.close()
             except AttributeError:
@@ -67,7 +69,7 @@ class SimpleShelve:
             self.filepath = None
 
     def __del__(self):
-        self.close()
+        self.close(sync=self.write_on_destroy)
 
     def __getitem__(self, key):
         try:

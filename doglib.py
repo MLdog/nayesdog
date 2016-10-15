@@ -3,6 +3,28 @@ import time
 import os
 
 
+def dargmax(d, vmax0=-1):
+    vmax = vmax0
+    kmax = 0
+    for k,v in d.items():
+        if v > vmax:
+            vmax = v
+            kmax = k
+    return kmax
+
+def classnamer(k):
+    return {0:"dislike", 1:"like"}.get(k, "dont know if you like")
+
+
+def print_sorted(d, indent=0, s="  "):
+    for k in sorted(d.keys()):
+        print("{}{}".format(s*indent, k))
+        if type(d[k]) == dict:
+            print_sorted(d[k], indent=indent+1)
+        else:
+            print("{}{}".format(s*(indent+1), d[k]))
+
+
 def file_to_str(filepath):
     with open(filepath, 'r') as f:
         s = f.read()
