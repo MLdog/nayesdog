@@ -1,5 +1,6 @@
 import re
 import time
+import os
 
 
 def file_to_str(filepath):

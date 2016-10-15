@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from math import log, exp as mexp
 from doglib import save_object_simple, load_object_simple
+from simpleshelve import SimpleShelve
 
 def exp(x):
     return mexp(x) if x<200 else mexp(200)
@@ -147,7 +148,10 @@ class NaiveBayes:
     EPS = 1e-10
     constPx = 1e-3
 
-    def __init__(self, db_file):
+    tablesfilepath = './tables.py.gz'
+    stopwordsfile = './stopwords.txt'
+
+    def __init__(self, db_file=self.tablesfilepath):
         if os.path.isfile(db_file):
             self.table = load_object_simple(db_file)
         else:
@@ -155,6 +159,24 @@ class NaiveBayes:
                 'wt': create_empty_word_count_table(),
                 'st': {0:0, 1:0}
             }
+        self.stopwords = set(file_to_str(self.stopwordsfile).split('\n'))
+
+    def save_tables(self):
+        save_object_simple(self.tablesfilepath, self.table)
+
+    def fit(self, d):
+        d_idstxts = transform_feed_dict(d)
+        update_word_count_tables(
+                self.table['wt'],
+                self.table['st'],
+                d_idstxts,
+                labels,
+                self.stopwords
+        )
+
+    def predict(self, newitem):
+        return classify_new_one_optimized(self.table['wt'], self.table['st'], newitem)
+
 
 
 
