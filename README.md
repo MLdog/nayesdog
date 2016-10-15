@@ -34,12 +34,6 @@ check folders:
 
 ## To-do
 
-* Why log and nolog versions of classify_new_one give different results?
 * Modify word_counts dict word_counts[0] and word_counts[1] contain the same keys
-* wrap transform_feed_dict and update_word_count_tables as one sklearn-like FIT function
 * Add any to-do we discussed but didn't put here.
-* We can also havo common syncthing folder for extra stuff
-* change facelib.py so
-    - instead of styling in it, it is done in css
-    - each news item is div with id, so then in CSS we can style it (e.g. with box-shadow property so it looks like http://blog.srvthe.net/. Refs: http://www.cssmatic.com/box-shadow http://www.w3schools.com/cssref/css3_pr_box-shadow.asp)
 * figure out how to keep norm to 1.0 for p(y|x)
