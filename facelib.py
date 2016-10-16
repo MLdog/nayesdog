@@ -48,7 +48,7 @@ def preprocess_rss_feed(url):
         if "link" in entry:
             entry_dic["link"] = entry["link"].encode('utf-8')
         if "id" in entry.keys():
-            entries[generate_entry_id(entry["id"])] = entry_dic
+            entries[generate_entry_id(entry["id"]).encode('utf-8')] = entry_dic
     return entries
 
 # old version of like-dislike
@@ -82,8 +82,11 @@ def to_form(element,action="\"\"", method="\"get\""):
     s += "</form>\n"
     return s
 
-def to_div(div, element):
-    s = "<div class=\""+div+"\">\n"
+def to_div(div,element,id_html=None):
+    if id_html is not None:
+        s = "<div class=\""+div+"\" id=\""+id_html+"\"> \n"
+    else:
+        s = "<div class=\""+div+"\">\n"
     s += element
     s += "</div>\n"
     return s
@@ -133,7 +136,7 @@ def to_body(element):
     s += '</body>\n'
     return s
 
-def represent_rss_entry(entry):
+def represent_rss_entry(entry, key_entry):
     s = ""
     if "title" in entry:
         if "link" in entry:
@@ -145,19 +148,11 @@ def represent_rss_entry(entry):
         s += to_span("authors",", ".join(entry["authors"]))
     if "content" in entry:
         s += to_span("content",entry["content"])
-    s = to_div("entry",s)
+    s = to_div("entry",s,key_entry)
     return s
 
-def generate_save_delete_option(var_name):
-    button_html_code = "<form action=\"\" method=\"get\">\n"
-    button_html_code += generate_submite_bouton(var_name,
-                                                "Save",
-                                                "/icons/save.png")
-    button_html_code += generate_submite_bouton(var_name,
-                                                "Delete",
-                                                "/icons/delete.png")
-    button_html_code += "</form>\n"
-    return button_html_code
+def to_anchor(element):
+    return "\"#"+element+"\""
 
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
@@ -189,7 +184,24 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         menu += to_span("menu_bar_separator",generate_horizontal_rule())
         return menu
 
-    def generate_like_options(self,var_name):
+    def generate_save_delete_option(self,
+                                    var_name,
+                                    anchor_to_closest_element,
+                                    method):
+        s = generate_submite_bouton(var_name,
+                                    "Save",
+                                    "/icons/save.png")
+        s += generate_submite_bouton(var_name,
+                                     "Delete",
+                                     "/icons/delete.png")
+        s = to_form(s,action=anchor_to_closest_element,method=method)
+        s = to_div("submit_bar",s)
+        return s
+
+    def generate_like_options(self, 
+                              var_name, 
+                              anchor_to_closest_element, 
+                              method):
         """
         Generate HTML code to create  radio and submit button for 
         Like/Dislike/Ignore options.
@@ -207,9 +219,9 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                      generate_submite_bouton(var_name,
                                              "Dislike",
                                              "/icons/dislike.png"))
-                     
-        s = to_form(s)
-        s = to_div("submit_bar",s)
+
+        s = to_form(s, action=anchor_to_closest_element, method=method)
+        s = to_div("submit_bar", s)
         return s
 
     def extract_chosen_feed_from_path(self):
@@ -301,6 +313,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.server.feed_chosen = folder
         session_dict.close()
 
+    def get_closest_element_anchor(self, keys, key_id, feed_chosen):
+        if key_id == len(keys) - 1:
+            return to_anchor(feed_chosen+"_"+keys[key_id - 1])
+        return to_anchor(feed_chosen+"_"+keys[key_id + 1])
+
     def do_GET(self):
         self.send_response(200)
         # import pdb; pdb.set_trace()
@@ -338,13 +355,24 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             # Represent each entry
             feed_chosen = self.server.feed_chosen
             if self.server.feed_chosen in feeds_menu_keys:
-                for key, entry in dict_feeds[feed_chosen].iteritems():
+                keys = dict_feeds[feed_chosen].keys()
+                for idx_key, key in enumerate(keys):
+                    entry = dict_feeds[feed_chosen][key]
+                    anchor = self.get_closest_element_anchor(keys, 
+                                                             idx_key,
+                                                             feed_chosen)
                     id_entry = self.generate_id_entry(feed_chosen, key)
-                    self.wfile.write(represent_rss_entry(entry))
+                    rss_entry = represent_rss_entry(entry,id_entry)
+                    self.wfile.write(rss_entry)
                     if self.server.current_preference_folder == "Home":
-                        self.wfile.write(self.generate_like_options(id_entry))
+                        self.wfile.write(self.generate_like_options(id_entry,
+                                                                    anchor,
+                                                                    "get"))
                     else:
-                        self.wfile.write(generate_save_delete_option(id_entry))
+                        self.wfile.write(self.generate_save_delete_option(
+                                                                 id_entry,
+                                                                 anchor,
+                                                                 "get"))
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
         return
