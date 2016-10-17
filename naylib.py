@@ -3,11 +3,13 @@ from collections import OrderedDict
 from math import log, exp as mexp
 from simpleshelve import save_object_simple, load_object_simple
 from doglib import file_to_str, transform_feed_dict
+
+from config import word_counts_database_file, stopwords_file
 #from simpleshelve import SimpleShelve
 
 
 EPS = 1e-12
-constPx = 1e-3 # words in english
+constPx = 1e-3 # prob to have a word in an item
 
 
 def exp(x):
@@ -157,8 +159,8 @@ def classify_new_one_optimized(word_counts, sum_dict, words):
 
 class NaiveBayes:
 
-    db_file = './tables.py.gz'
-    stopwordsfile = './stopwords.txt'
+    db_file = word_counts_database_file
+    stopwordsfile = stopwords_file
 
     def __init__(self, db_file=None):
         if db_file is not None:

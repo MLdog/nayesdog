@@ -14,3 +14,5 @@ feeds_url_dict = {
     'Reddit': 'https://www.reddit.com/r/worldnews/.rss',
 }
 
+word_counts_database_file = './tables.py.gz'
+stopwords_file = './stopwords.txt'
