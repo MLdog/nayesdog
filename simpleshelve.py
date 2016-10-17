@@ -1,18 +1,19 @@
 """
 SimpleShelve
 
-A hacky replacement for shelve module
+A hacky replacement for shelve module (uses eval function)
 supports OrderedDicts and any standard python datatype
 
 Copyright Ilya Prokin 2016
 
-Data base is simple zip file with clean python code defining object
+Database is simple zip file with clean python code defining object
 
 Usage example:
     ``` {.python}
-    s = SimpleShelve('file.db')
+    s = SimpleShelve('file.py.gz')
     s['asdasdasdasdasdas'] = 434534534
     print(s)
+    s.close()
     ```
     Output:
         {'asdasdasdasdasdas': 434534534}
@@ -21,7 +22,7 @@ Usage example:
 """
 
 import os
-import gzip # to save/laod
+import gzip
 from collections import OrderedDict # has to be here even that it is not used in code
 
 

@@ -16,30 +16,6 @@ def exp(x):
     return mexp(x) if x<200 else mexp(200)
 
 
-def create_empty_word_count_table():
-    return {
-        0:OrderedDict(),
-        1:OrderedDict()
-    }
-
-
-def update_word_count_tables(
-        word_counts,
-        sum_dict,
-        d_idstxts,
-        labels,
-        stopwords):
-
-    for k in d_idstxts.keys():
-        if k in labels.keys():
-            for word in d_idstxts[k]:
-                if word not in stopwords:
-                    if word in word_counts[labels[k]].keys():
-                        word_counts[labels[k]][word] += 1
-                        sum_dict[labels[k]] += 1
-                    else:
-                        word_counts[labels[k]][word] = 0
-
 
 # def classify_new_one(word_counts, sum_dict, words):
 #     Ps = dict(
@@ -162,16 +138,26 @@ class NaiveBayes:
     db_file = word_counts_database_file
     stopwordsfile = stopwords_file
 
+    def create_empty_tables():
+        return {'wt':
+                    {
+                        0:OrderedDict(),
+                        1:OrderedDict()
+                    },
+                'st':
+                    {
+                        0:0,
+                        1:0
+                    }
+               }
+
     def __init__(self, db_file=None):
         if db_file is not None:
             self.db_file = db_file
         if os.path.isfile(self.db_file):
             self.table = load_object_simple(self.db_file)
         else:
-            self.table = {
-                'wt': create_empty_word_count_table(),
-                'st': {0:0, 1:0}
-            }
+            self.table = self.create_empty_tables()
         self.stopwords = set(file_to_str(self.stopwordsfile).split('\n'))
 
     def save_tables(self):
@@ -179,13 +165,15 @@ class NaiveBayes:
 
     def fit(self, d, labels):
         d_idstxts = transform_feed_dict(d)
-        update_word_count_tables(
-                self.table['wt'],
-                self.table['st'],
-                d_idstxts,
-                labels,
-                self.stopwords
-        )
+        for k in d_idstxts.keys():
+            if k in labels.keys():
+                for word in d_idstxts[k]:
+                    if word not in stopwords:
+                        if word in self.table['wt'][labels[k]].keys():
+                            self.table['wt'][labels[k]][word] += 1
+                            self.table['st'][labels[k]] += 1
+                        else:
+                            self.table['wt'][labels[k]][word] = 0
 
     def predict(self, newitem):
         return classify_new_one_optimized(
