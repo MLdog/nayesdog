@@ -42,3 +42,4 @@ check folders:
 * As soon as we start the program make the classifier predict the user preference on each entry in "Home"
 * Modify the do_GET method in order to present the feeds ordered by their ranks
 * Put more explicit names to classify_new_one_optimized 
+* We should check if the function is ok ... I think I wrote exactly the same function you did but we need to be sure (sergio) 

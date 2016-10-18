@@ -164,6 +164,10 @@ def represent_rss_entry(entry, key_entry):
         s += to_span("authors",", ".join(entry["authors"]))
     if "content" in entry:
         s += to_span("content",entry["content"])
+    if "prediction" in entry:
+        prediction = entry["prediction"]
+        s += "P(Dislike) = "+str(prediction[0])+"<br>\n"
+        s += "P(Like) = "+str(prediction[1])+"<br>\n"
     s = to_div("entry",s,key_entry)
     return s
 
@@ -463,6 +467,8 @@ class HTTPServerFeeds(HTTPServer):
                         session_dict["preferences"]["Home"][feed] = {}
                     session_dict["preferences"]["Home"][feed][key] = entry
                     session_dict["seen_entries_keys"].append(key)
+                    x = tranform_feed_entry_to_bag_of_words(entry)
+                    entry["prediction"] = self.nayesdog.predict(x)
         session_dict.close()
 
 

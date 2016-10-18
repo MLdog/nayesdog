@@ -211,18 +211,21 @@ class NaiveBayes:
         self.save_tables()
 
     def predict(self, X, Y=None):
-        if isinstance(X,list):
+    
+        if isinstance(X[0],list):
             Y_predicted = []
             for x in X:
-                y_predicted = compute_probabilities_one_entry(x)
+                y_predicted = self.compute_probabilities_one_entry(x)
                 Y_predicted.append(y_predicted)
             return Y_predicted
-        return compute_probabilities_one_entry(X)
-        #return classify_new_one_optimized(
-        #        self.table['word_counts'],
-        #        self.table['sum_dict'],
-        #        X
-        #)
+        return self.compute_probabilities_one_entry(X)
+        """
+        return classify_new_one_optimized(
+                self.table['word_counts'],
+                self.table['sum_dict'],
+                X
+        )
+        """
 
     def compute_probabilities_one_entry(self,x):
         """
