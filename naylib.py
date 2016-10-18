@@ -138,7 +138,7 @@ class NaiveBayes:
     db_file = word_counts_database_file
     stopwordsfile = stopwords_file
 
-    def create_empty_tables():
+    def create_empty_tables(self):
         return {'wt':
                     {
                         0:OrderedDict(),
@@ -165,6 +165,7 @@ class NaiveBayes:
 
     # former update_tables
     def fit(self, d_idstxts, labels):
+
         #d_idstxts = transform_feed_dict(d)
         for k in d_idstxts.keys():
             if k in labels.keys():

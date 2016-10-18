@@ -263,33 +263,34 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
-            session_dict =shelve.open(self.server.previous_session,writeback=True)
+            session_dict = shelve.open(self.server.previous_session,writeback=True)
             print feed_name,self.server.current_preference_folder
-            #import ipdb; ipdb.set_trace()
-            if preference == "Like":
+            if index in session_dict["preferences"][self.server.current_preference_folder][feed_name].keys():
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                if feed_name not in session_dict["preferences"][preference]:
-                    session_dict["preferences"][preference][feed_name] = {}
-                session_dict["preferences"][preference][feed_name][index] = entry
-                # train dog here
-                bag = process_sergios_entry(entry, index)
-                self.ML.fit(bag, {index: 1})
-                session_dict.close()
-            if preference == "Dislike":
-                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                # train dog here
-                bag = process_sergios_entry(entry, index)
-                self.ML.fit(bag, {index: 0})
-            if preference in ["Delete"]:
-                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                if preference == "Like":
+                    if feed_name not in session_dict["preferences"][preference]:
+                        session_dict["preferences"][preference][feed_name] = {}
+                    session_dict["preferences"][preference][feed_name][index] = entry
+                    # train dog here
+                    bag = process_sergios_entry(entry, index)
+                    self.ML.fit(bag, {index: 1})
+                    import ipdb; ipdb.set_trace()
+                    self.ML.save_tables() # tmp for test
+                    session_dict.close()
+                elif preference == "Dislike":
+                #    entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                    # train dog here
+                    bag = process_sergios_entry(entry, index)
+                    self.ML.fit(bag, {index: 0})
+                    import ipdb; ipdb.set_trace()
+                    self.ML.save_tables() # tmp for test
+                #elif preference in ["Delete"]:
+                #    session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference in ["Save"]:
-                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
                 file_save = open(feed_name+"_saved_entries.html","a")
                 file_save.write(represent_rss_entry(entry))
                 file_save.write(self.generate_entry_separator())
                 file_save.close()
-
-
 
     def generate_id_entry(self, feed_name, index):
         """
@@ -385,6 +386,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                                                                  "get"))
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
+
         return
 
 

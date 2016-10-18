@@ -214,6 +214,7 @@ def process_sergios_entry(e, index):
     Process an RSS entry and list of words for training
     """
     # transform title and content to bag of lowercase words
+
     l = sum(list(
             map(
                 lambda s:
