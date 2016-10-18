@@ -152,7 +152,7 @@ class NaiveBayes:
         if insertion_index >= self.maximal_number_of_entries:
             insertion_index = 0
         self.table['insertion_index'] = insertion_index
-        self.sort_word_tables()
+        #self.sort_word_tables()
         self.save_tables()
 
     def predict(self, X, Y=None):
@@ -192,11 +192,13 @@ class NaiveBayes:
         for y in word_counts.keys():
             prod_P_xi_y_numerator = 1.0
             prod_P_xi_y_denominator = 1.0
+            at_least_one_known_word = False
             for word in x:
                 if word in word_counts[y]:
                     prod_P_xi_y_numerator *= word_counts[y][word]
                     prod_P_xi_y_denominator *= sum_dict[y]
-            if prod_P_xi_y_denominator == prod_P_xi_y_numerator == 1.0:
+                    at_least_one_known_word = True
+            if not at_least_one_known_word:
                 P_y_x[y] = 0.0
             else:
                 P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator  
