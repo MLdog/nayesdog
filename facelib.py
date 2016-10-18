@@ -3,7 +3,8 @@ import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from  urlparse import urlparse
-from doglib import file_to_str, simplify_html
+from doglib import file_to_str, simplify_html, process_sergios_entry
+from naylib import NaiveBayes
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
 import time
@@ -156,7 +157,11 @@ def to_anchor(element):
 
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
-    
+
+    def __init__(self, *args):
+        BaseHTTPRequestHandler.__init__(self, *args)
+        self.ML = NaiveBayes()
+
     def generate_header(self, list_rss_feeds):
         """
         Generate HTML code to create the header of the webpage interface.
@@ -260,16 +265,21 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             index = entry_information["index"]
             session_dict =shelve.open(self.server.previous_session,writeback=True)
             print feed_name,self.server.current_preference_folder
+            #import ipdb; ipdb.set_trace()
             if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if feed_name not in session_dict["preferences"][preference]:
                     session_dict["preferences"][preference][feed_name] = {}
                 session_dict["preferences"][preference][feed_name][index] = entry
                 # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 1})
                 session_dict.close()
             if preference == "Dislike":
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 0})
             if preference in ["Delete"]:
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference in ["Save"]:
@@ -279,7 +289,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 file_save.write(self.generate_entry_separator())
                 file_save.close()
 
-        # self.smartdog.fit()
+
 
     def generate_id_entry(self, feed_name, index):
         """

@@ -163,8 +163,9 @@ class NaiveBayes:
     def save_tables(self):
         save_object_simple(self.db_file, self.table)
 
-    def fit(self, d, labels):
-        d_idstxts = transform_feed_dict(d)
+    # former update_tables
+    def fit(self, d_idstxts, labels):
+        #d_idstxts = transform_feed_dict(d)
         for k in d_idstxts.keys():
             if k in labels.keys():
                 for word in d_idstxts[k]:
