@@ -37,3 +37,7 @@ check folders:
 * Modify word_counts dict word_counts[0] and word_counts[1] contain the same keys
 * Add any to-do we discussed but didn't put here.
 * figure out how to keep norm to 1.0 for p(y|x)
+* Modify predict and classify_new_one_optimized in order to make one method belonging to the class NaiveBayes
+* Add a list of pairs [(id_entry, prediction) ] to each feed in "Home". In order to present the feeds ordered by their rank (in face lib.py)
+* As soon as we start the program make the classifier predict the user preference on each entry in "Home"
+* Modify the do_GET method in order to present the feeds ordered by their ranks
