@@ -86,7 +86,7 @@ class NaiveBayes:
                         else:
                             self.table['word_counts'][labels[k]][word] = 0
 
-    def tell_Pxy_minus_Py(self, label=1):
+    def sort_word_tables(self, label=1):
         def compute_rank(word):
             Ps = classify_new_one_optimized(
                 self.table['word_counts'],
@@ -152,6 +152,7 @@ class NaiveBayes:
         if insertion_index >= self.maximal_number_of_entries:
             insertion_index = 0
         self.table['insertion_index'] = insertion_index
+        self.sort_word_tables()
         self.save_tables()
 
     def predict(self, X, Y=None):
