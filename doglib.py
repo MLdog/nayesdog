@@ -209,6 +209,30 @@ def process_an_entry(e):
     return l
 
 
+def process_sergios_entry(e, index):
+    """
+    Process an RSS entry and list of words for training
+    """
+    # transform title and content to bag of lowercase words
+    l = sum(list(
+            map(
+                lambda s:
+                    nopunctuation(
+                        notags(s).replace('\n', ' ').replace(u'\xa0', ' ')
+                    ).strip().lower().split(' ')
+                ,
+                [
+                    e['title'],
+                    e['content']
+                ]
+            )
+         ), [])
+    # add authors if any
+    if 'authors' in e.keys():
+        l += e['authors']
+    return {index:l}
+
+
 def transform_feed_dict(d):
     # load simplified entries
     entries = list(map(process_an_entry, d['entries']))

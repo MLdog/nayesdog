@@ -1,11 +1,8 @@
 import feedparser
 import re
-from urlparse import urlparse
-from doglib import (
-        file_to_str,
-        simplify_html,
-        tranform_feed_entry_to_bag_of_words
-        )
+#import html2text
+# entry_separation = '<hr style="height: 10px; color: #000">'
+from naylib import NaiveBayes
 import mimetypes
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import naylib
@@ -169,7 +166,11 @@ def to_anchor(element):
 
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
-    
+
+    def __init__(self, *args):
+        BaseHTTPRequestHandler.__init__(self, *args)
+        self.ML = NaiveBayes()
+
     def generate_header(self, list_rss_feeds):
         """
         Generate HTML code to create the header of the webpage interface.
@@ -272,11 +273,17 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             feed_name = entry_information["feed"]
             index = entry_information["index"]
             session_dict =shelve.open(self.server.previous_session,writeback=True)
+<<<<<<< HEAD
+=======
+            print feed_name,self.server.current_preference_folder
+            #import ipdb; ipdb.set_trace()
+>>>>>>> origin/master
             if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if feed_name not in session_dict["preferences"][preference]:
                     session_dict["preferences"][preference][feed_name] = {}
                 session_dict["preferences"][preference][feed_name][index] = entry
+<<<<<<< HEAD
                 x = tranform_feed_entry_to_bag_of_words(entry)
                 self.server.nayesdog.fit(x,1)
                 session_dict.close()
@@ -284,6 +291,17 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 x = tranform_feed_entry_to_bag_of_words(entry)
                 self.server.nayesdog.fit(x,0)
+=======
+                # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 1})
+                session_dict.close()
+            if preference == "Dislike":
+                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 0})
+>>>>>>> origin/master
             if preference in ["Delete"]:
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference in ["Save"]:
@@ -293,7 +311,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 file_save.write(self.generate_entry_separator())
                 file_save.close()
 
-        # self.smartdog.fit()
+
 
     def generate_id_entry(self, feed_name, index):
         """
