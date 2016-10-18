@@ -48,7 +48,6 @@ def classify_new_one_optimized(word_counts, sum_dict, words):
 
     return Ps
 
-
 class NaiveBayes:
 
     def __init__(self,
@@ -132,7 +131,7 @@ class NaiveBayes:
                     self.table['word_counts'][y][word] -= 1
                     self.table['sum_dict'][y] -= 1
                     if not self.table['word_counts'][y][word]:
-                        self.table['word_counts'].pop(word)
+                        self.table['word_counts'][y].pop(word)
 
     def insert_new_entry(self, x, y):
         for word in x:
@@ -155,11 +154,52 @@ class NaiveBayes:
         self.table['insertion_index'] = insertion_index
         self.save_tables()
 
-    def predict(self, newitem):
+    def predict(self, X, Y=None):
+    
+        if isinstance(X[0],list):
+            Y_predicted = []
+            for x in X:
+                y_predicted = self.compute_probabilities_one_entry(x)
+                Y_predicted.append(y_predicted)
+            return Y_predicted
+        return self.compute_probabilities_one_entry(X)
+        """
         return classify_new_one_optimized(
                 self.table['word_counts'],
                 self.table['sum_dict'],
-                newitem
+                X
         )
+        """
 
+    def compute_probabilities_one_entry(self,x):
+        """
+        Compute the probabilities that the given entry belongs to each one of
+        the existing classes. P_x denote here the probability to observe the
+        set of words x. P_y_x denotes the probability that the entry belongs to
+        class y given the set of words x it contains. 
+        :param x: Bag of words
+        :type x: List of Strings
+        :returns: Probabilities of membership of the current entry to each one
+        of the possible classes
+        :rtype: Dict.
+        """
+        word_counts = self.table["word_counts"]
+        sum_dict = self.table["sum_dict"]
+        P_x = constPx
+        P_y_x = {}
+        total_nb_words = sum(sum_dict.values())
+        for y in word_counts.keys():
+            prod_P_xi_y_numerator = 1.0
+            prod_P_xi_y_denominator = 1.0
+            for word in x:
+                if word in word_counts[y]:
+                    prod_P_xi_y_numerator *= word_counts[y][word]
+                    prod_P_xi_y_denominator *= sum_dict[y]
+            if prod_P_xi_y_denominator == prod_P_xi_y_numerator == 1.0:
+                P_y_x[y] = 0.0
+            else:
+                P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator  
+                P_y_x_denominator = prod_P_xi_y_denominator * total_nb_words * P_x
+                P_y_x[y] = P_y_x_numerator * 1./P_y_x_denominator   
+        return P_y_x
 

@@ -3,7 +3,13 @@ import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from naylib import NaiveBayes
+from urlparse import urlparse
 import mimetypes
+from doglib import (
+        tranform_feed_entry_to_bag_of_words,
+        file_to_str,
+        simplify_html
+        )
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import naylib
 import time
@@ -158,6 +164,10 @@ def represent_rss_entry(entry, key_entry):
         s += to_span("authors",", ".join(entry["authors"]))
     if "content" in entry:
         s += to_span("content",entry["content"])
+    if "prediction" in entry:
+        prediction = entry["prediction"]
+        s += "P(Dislike) = "+str(prediction[0])+"<br>\n"
+        s += "P(Like) = "+str(prediction[1])+"<br>\n"
     s = to_div("entry",s,key_entry)
     return s
 
@@ -180,7 +190,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code to generate a header for the webpage interface 
         :rtype: String 
         """
-        nb_feeds = len(list_rss_feeds)
         html_table_row = ""
         for feed in list_rss_feeds:
             menu_element = generate_link(feed, feed)
@@ -189,13 +198,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             else:
                 menu_element = to_span("unselected_link", menu_element)
             html_table_column = generate_html_table_column(menu_element)
-            html_table_column = to_span("menu_column_table",html_table_column)
-            html_table_row += html_table_column 
+            html_table_column = to_span("menu_column_table", html_table_column)
+            html_table_row += html_table_column
         html_table_row = to_span("menu_row_table", html_table_row)
         menu = generate_html_table_row(html_table_row)
         menu = generate_html_table(menu)
-        menu = to_div("menu_bar",menu)
-        menu += to_span("menu_bar_separator",generate_horizontal_rule())
+        menu = to_div("menu_bar", menu)
+        menu += to_span("menu_bar_separator", generate_horizontal_rule())
         return menu
 
     def generate_save_delete_option(self,
@@ -272,39 +281,27 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
-            session_dict =shelve.open(self.server.previous_session,writeback=True)
-            print feed_name,self.server.current_preference_folder
-            #import ipdb; ipdb.set_trace()
+            session_dict = shelve.open(self.server.previous_session, writeback=True)
             if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if feed_name not in session_dict["preferences"][preference]:
                     session_dict["preferences"][preference][feed_name] = {}
                 session_dict["preferences"][preference][feed_name][index] = entry
                 x = tranform_feed_entry_to_bag_of_words(entry)
-                self.server.nayesdog.fit(x,1)
+                self.server.nayesdog.fit(x, 1)
                 session_dict.close()
             if preference == "Dislike":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 x = tranform_feed_entry_to_bag_of_words(entry)
-                self.server.nayesdog.fit(x,0)
-                # train dog here
-                bag = process_sergios_entry(entry, index)
-                self.ML.fit(bag, {index: 1})
-                session_dict.close()
-            if preference == "Dislike":
-                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                # train dog here
-                bag = process_sergios_entry(entry, index)
-                self.ML.fit(bag, {index: 0})
-            if preference == "Delete":
+                self.server.nayesdog.fit(x, 0)
+            if preference in ["Delete"]:
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference == "Save":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
-                file_save = open(feed_name+"_saved_entries.html","a")
+                file_save = open(feed_name+"_saved_entries.html", "a")
                 file_save.write(represent_rss_entry(entry))
                 file_save.write(self.generate_entry_separator())
                 file_save.close()
-
 
     def generate_id_entry(self, feed_name, index):
         """
@@ -397,11 +394,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 keys = dict_feeds[feed_chosen].keys()
                 for idx_key, key in enumerate(keys):
                     entry = dict_feeds[feed_chosen][key]
-                    anchor = self.get_closest_element_anchor(keys, 
+                    anchor = self.get_closest_element_anchor(keys,
                                                              idx_key,
                                                              feed_chosen)
                     id_entry = self.generate_id_entry(feed_chosen, key)
-                    rss_entry = represent_rss_entry(entry,id_entry)
+                    rss_entry = represent_rss_entry(entry, id_entry)
                     self.wfile.write(rss_entry)
                     if self.server.current_preference_folder == "Home":
                         self.wfile.write(self.generate_like_options(id_entry,
@@ -470,6 +467,8 @@ class HTTPServerFeeds(HTTPServer):
                         session_dict["preferences"]["Home"][feed] = {}
                     session_dict["preferences"]["Home"][feed][key] = entry
                     session_dict["seen_entries_keys"].append(key)
+                    x = tranform_feed_entry_to_bag_of_words(entry)
+                    entry["prediction"] = self.nayesdog.predict(x)
         session_dict.close()
 
 

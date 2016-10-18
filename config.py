@@ -23,4 +23,4 @@ feeds_url_dict = {
 word_counts_database_file = './tables.py.gz'
 stopwords_file = './stopwords.txt'
 previous_session_database_file = '.previous_session'
-maximal_number_of_entries_in_memory = 30
+maximal_number_of_entries_in_memory = 300
