@@ -2,14 +2,22 @@ import feedparser
 import re
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
-from  urlparse import urlparse
-from doglib import file_to_str, simplify_html, process_sergios_entry
 from naylib import NaiveBayes
 import mimetypes
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import naylib
 import time
 import shelve
 import os
+from config import (
+        server_address,
+        cssfile,
+        feeds_url_dict,
+        previous_session_database_file,
+        word_counts_database_file,
+        maximal_number_of_entries_in_memory,
+        stopwords_file
+        )
 page_head_tpl = """
 <!DOCTYPE html><html><head>
   <meta charset="utf-8">
@@ -34,7 +42,8 @@ def preprocess_rss_feed(url):
     for entry in feed_parsed['entries']:
         entry_dic = {"title": "",
                      "content": "",
-                     "author": "",
+                     "authors": "",
+                     "link": "",
                      "time": str(time.time())}
         if "title" in entry:
             entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
@@ -70,7 +79,7 @@ def generate_radio(var_name, value, txtzo):
     return s
 
 
-def generate_submite_bouton(var_name, value, image_path):
+def generate_submit_button(var_name, value, image_path):
     s = "<input type=\"image\" name=\""+var_name+"\" "
     s += "value=\""+value+"\" "
     s += "src=\""+image_path+"\"> \n"
@@ -193,10 +202,10 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                                     var_name,
                                     anchor_to_closest_element,
                                     method):
-        s = generate_submite_bouton(var_name,
+        s = generate_submit_button(var_name,
                                     "Save",
                                     "/icons/save.png")
-        s += generate_submite_bouton(var_name,
+        s += generate_submit_button(var_name,
                                      "Delete",
                                      "/icons/delete.png")
         s = to_form(s,action=anchor_to_closest_element,method=method)
@@ -217,11 +226,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :rtype: String.
         """
         s = to_span("submit_button",
-                    generate_submite_bouton(var_name,
+                    generate_submit_button(var_name,
                                             "Like",
                                             "/icons/like.png"))
         s += to_span("submit_button",
-                     generate_submite_bouton(var_name,
+                     generate_submit_button(var_name,
                                              "Dislike",
                                              "/icons/dislike.png"))
 
@@ -263,34 +272,39 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
-            session_dict = shelve.open(self.server.previous_session,writeback=True)
+            session_dict =shelve.open(self.server.previous_session,writeback=True)
             print feed_name,self.server.current_preference_folder
-            if index in session_dict["preferences"][self.server.current_preference_folder][feed_name].keys():
+            #import ipdb; ipdb.set_trace()
+            if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                if preference == "Like":
-                    if feed_name not in session_dict["preferences"][preference]:
-                        session_dict["preferences"][preference][feed_name] = {}
-                    session_dict["preferences"][preference][feed_name][index] = entry
-                    # train dog here
-                    bag = process_sergios_entry(entry, index)
-                    self.ML.fit(bag, {index: 1})
-                    import ipdb; ipdb.set_trace()
-                    self.ML.save_tables() # tmp for test
-                    session_dict.close()
-                elif preference == "Dislike":
-                #    entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                    # train dog here
-                    bag = process_sergios_entry(entry, index)
-                    self.ML.fit(bag, {index: 0})
-                    import ipdb; ipdb.set_trace()
-                    self.ML.save_tables() # tmp for test
-                #elif preference in ["Delete"]:
-                #    session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-            if preference in ["Save"]:
+                if feed_name not in session_dict["preferences"][preference]:
+                    session_dict["preferences"][preference][feed_name] = {}
+                session_dict["preferences"][preference][feed_name][index] = entry
+                x = tranform_feed_entry_to_bag_of_words(entry)
+                self.server.nayesdog.fit(x,1)
+                session_dict.close()
+            if preference == "Dislike":
+                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                x = tranform_feed_entry_to_bag_of_words(entry)
+                self.server.nayesdog.fit(x,0)
+                # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 1})
+                session_dict.close()
+            if preference == "Dislike":
+                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                # train dog here
+                bag = process_sergios_entry(entry, index)
+                self.ML.fit(bag, {index: 0})
+            if preference == "Delete":
+                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+            if preference == "Save":
+                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
                 file_save = open(feed_name+"_saved_entries.html","a")
                 file_save.write(represent_rss_entry(entry))
                 file_save.write(self.generate_entry_separator())
                 file_save.close()
+
 
     def generate_id_entry(self, feed_name, index):
         """
@@ -328,6 +342,20 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         if key_id == len(keys) - 1:
             return to_anchor(feed_chosen+"_"+keys[key_id - 1])
         return to_anchor(feed_chosen+"_"+keys[key_id + 1])
+
+    """
+    # The information is in self.rfile.read(length)
+    # Then we will probably need to call the same functions as in do_GET
+    def do_POST(self):
+        request_path = self.path
+        print("\n----- Request post Start ----->\n")
+        print(request_path)
+        request_headers = self.headers
+        content_length = request_headers.getheaders('content-length')
+        length =int(content_length[0]) if content_length else 0
+        print(request_headers)
+        print(self.rfile.read(length))
+    """
 
     def do_GET(self):
         self.send_response(200)
@@ -386,7 +414,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                                                                  "get"))
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
-
         return
 
 
@@ -396,7 +423,10 @@ class HTTPServerFeeds(HTTPServer):
                  HTTPServer_RequestHandler,
                  cssfile,
                  feeds_url_dict,
-                 previous_session=".previous_session"):
+                 previous_session,
+                 word_counts_database_file,
+                 stopwords_file,
+                 maximal_number_of_entries):
         """
         Generates an instance for HTTPServerFeeds that inheritates from
         HTTPServer class.
@@ -408,14 +438,16 @@ class HTTPServerFeeds(HTTPServer):
         :type server_address: Tuple.
         :type HTTPServer_RequestHandler: HTTPServer_RequestHandler class.
         :type cssfile: String.
-        :type feeds_url_dict: Dict.
-        """
+        :type feeds_url_dict: Dict."""
         HTTPServer.__init__(self, server_address, HTTPServer_RequestHandler)
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
         self.previous_session = previous_session
         self.current_preference_folder = "Home"
         self.feed_chosen = ""
+        self.nayesdog = naylib.NaiveBayes(word_counts_database_file,
+                                          stopwords_file,
+                                          maximal_number_of_entries)
         self.update_session()
 
     def update_session(self):
@@ -442,11 +474,14 @@ class HTTPServerFeeds(HTTPServer):
 
 
 def run():
-    from config import server_address, cssfile, feeds_url_dict
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
-                            feeds_url_dict)
+                            feeds_url_dict,
+                            previous_session_database_file,
+                            word_counts_database_file,
+                            stopwords_file,
+                            maximal_number_of_entries_in_memory)
     print('running server...')
     httpd.serve_forever()
 

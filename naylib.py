@@ -10,94 +10,10 @@ from config import word_counts_database_file, stopwords_file
 
 EPS = 1e-12
 constPx = 1e-3 # prob to have a word in an item
-
+MAXNBENTRIES = 300
 
 def exp(x):
     return mexp(x) if x<200 else mexp(200)
-
-
-
-# def classify_new_one(word_counts, sum_dict, words):
-#     Ps = dict(
-#         y=dict(),
-#         yx=dict(),
-#         Pixy=dict()
-#     )
-#     Ps['x'] = constPx
-#     sum_dict = {k:float(v) for k,v in sum_dict.items()} # to let division work in python2.7
-#     total = sum(sum_dict.values())
-# 
-#     # estimate Px. It migh be better to just fix it to >0 <1
-#     # tn = 1.0
-#     # for w in words:
-# 
-#     #     wc = 0.0 # word conut across labels
-#     #     for label in word_counts.keys():
-#     #         if w in word_counts[label]:
-#     #             wc += word_counts[label][w]
-# 
-#     #     if wc != 0: # otherwise no real info so do not update
-#     #         Ps['x'] *= wc # assuming independence
-#     #         tn *= total
-#     # Ps['x'] /= tn
-# 
-#     for label in word_counts.keys():
-# 
-#         Ps['Pixy'][label] = 1.0
-#         sm = 1.0
-#         for w in words:
-#             if w in word_counts[label]:
-#                 Ps['Pixy'][label] *= word_counts[label][w]
-#                 sm *= sum_dict[label]
-#         
-#         Ps['Pixy'][label] /= sm
-# 
-#         Ps['y'][label] = sum_dict[label] / total
-# 
-#         Ps['yx'][label] = Ps['y'][label] * Ps['Pixy'][label] / Ps['x']
-# 
-#     return Ps
-# 
-# 
-# def classify_new_one_log(word_counts, sum_dict, words):
-#     # First Ps are logP, they they are P
-#     Ps = dict(
-#         y=dict(),
-#         yx=dict(),
-#         Pixy=dict()
-#     )
-#     Ps['x'] = log( constPx )
-# 
-#     sum_dict = {k:float(v) for k,v in sum_dict.items()} # to let division work in python2.7
-#     total = sum(sum_dict.values())
-# 
-#     # estimate Px. It migh be better to just fix it to >0 <1
-#     #for w in words:
-# 
-#     #    wc = 0.0 # word conut across labels
-#     #    for label in word_counts.keys():
-#     #        if w in word_counts[label]:
-#     #            wc += word_counts[label][w]
-# 
-#     #    Ps['x'] += log( EPS + wc ) - log ( EPS + total ) # assuming independence 
-# 
-#     for label in word_counts.keys():
-# 
-#         Ps['Pixy'][label] = 0.0
-#         for w in words:
-#             if w in word_counts[label]:
-#                 Ps['Pixy'][label] += log( EPS + word_counts[label][w] ) - log( EPS + sum_dict[label] )
-# 
-#         Ps['y'][label] = log( EPS + sum_dict[label] ) - log ( EPS + total )
-# 
-#         Ps['yx'][label] = Ps['y'][label] + Ps['Pixy'][label] - Ps['x']
-# 
-#     # convert logP to P
-#     Ps['x'] = exp( Ps['x'] )
-#     for key in ['y', 'yx', 'Pixy']:
-#         Ps[key] = {k:exp(v) for k,v in Ps[key].items()}
-# 
-#     return Ps
 
 
 def classify_new_one_optimized(word_counts, sum_dict, words):
@@ -135,52 +51,114 @@ def classify_new_one_optimized(word_counts, sum_dict, words):
 
 class NaiveBayes:
 
-    db_file = word_counts_database_file
-    stopwordsfile = stopwords_file
-
-    def create_empty_tables(self):
-        return {'wt':
-                    {
-                        0:OrderedDict(),
-                        1:OrderedDict()
-                    },
-                'st':
-                    {
-                        0:0,
-                        1:0
-                    }
-               }
-
-    def __init__(self, db_file=None):
-        if db_file is not None:
-            self.db_file = db_file
+    def __init__(self,
+                 db_file=word_counts_database_file,
+                 stopwordsfile=stopwords_file,
+                 maximal_number_of_entries=MAXNBENTRIES):
+        self.db_file = db_file
         if os.path.isfile(self.db_file):
             self.table = load_object_simple(self.db_file)
         else:
             self.table = self.create_empty_tables()
-        self.stopwords = set(file_to_str(self.stopwordsfile).split('\n'))
+        self.stopwords = set(file_to_str(stopwordsfile).split('\n'))
+        self.maximal_number_of_entries = maximal_number_of_entries
 
+    def create_empty_tables(self):
+        tables = {'word_counts': {0: OrderedDict(),
+                                  1: OrderedDict()},
+                  'sum_dict': {0: 0,
+                               1: 0},
+                  'bag_words_in_memory': [],
+                  'insertion_index':0}
+        return tables
+    
     def save_tables(self):
         save_object_simple(self.db_file, self.table)
 
-    # former update_tables
-    def fit(self, d_idstxts, labels):
-
-        #d_idstxts = transform_feed_dict(d)
+    def fit_from_feed(self, d, labels):
+        d_idstxts = transform_feed_dict(d)
         for k in d_idstxts.keys():
             if k in labels.keys():
                 for word in d_idstxts[k]:
-                    if word not in stopwords:
-                        if word in self.table['wt'][labels[k]].keys():
-                            self.table['wt'][labels[k]][word] += 1
-                            self.table['st'][labels[k]] += 1
+                    if word not in self.stopwords:
+                        if word in self.table['word_counts'][labels[k]].keys():
+                            self.table['word_counts'][labels[k]][word] += 1
+                            self.table['sum_dict'][labels[k]] += 1
                         else:
-                            self.table['wt'][labels[k]][word] = 0
+                            self.table['word_counts'][labels[k]][word] = 0
+
+    def tell_Pxy_minus_Py(self, label=1):
+        def compute_rank(word):
+            Ps = classify_new_one_optimized(
+                self.table['word_counts'],
+                self.table['sum_dict'],
+                word
+            )
+            return Ps['yx'][label]-Ps['y'][label]
+
+        # sort
+        self.table['word_counts'][label] = sorted(
+                self.table['word_counts'][label].items(),
+                key=lambda x: compute_rank(x[0])
+                )
+
+        # use the same order for other labels
+        # Probably its better to reverse order of indices so label goes last
+        # [word][label]
+        otherlabels = self.table['word_counts'].keys()
+        otherlabels.pop(label)
+        for lbl in otherlabels:
+            self.table['word_counts'][lbl] = OrderedDict(
+                    (k, self.table['word_counts'][lbl][k])
+                     for k in self.table['word_counts'][label].keys()
+            )
+        
+        
+
+    def fit(self, X, Y):
+        if isinstance(X[0],list):
+            for i,x in enumerate(X):
+                y = Y[i]
+                self.insert_new_entry(x,y)
+        else:
+            self.insert_new_entry(X,Y)
+
+    def remove_oldest_entry(self):
+        insertion_index = self.table['insertion_index']
+        if insertion_index < len(self.table["bag_words_in_memory"]):
+            x,y = self.table['bag_words_in_memory'][insertion_index]
+            for word in x:
+                if word not in self.stopwords:
+                    self.table['word_counts'][y][word] -= 1
+                    self.table['sum_dict'][y] -= 1
+                    if not self.table['word_counts'][y][word]:
+                        self.table['word_counts'].pop(word)
+
+    def insert_new_entry(self, x, y):
+        for word in x:
+            if word not in self.stopwords:
+                if word in self.table['word_counts'][y].keys():
+                    self.table['word_counts'][y][word] += 1
+                    self.table['sum_dict'][y] += 1
+                else:
+                    self.table['word_counts'][y][word] = 1
+                    self.table['sum_dict'][y] += 1
+        insertion_index = self.table['insertion_index']
+        self.remove_oldest_entry()
+        if insertion_index < len(self.table["bag_words_in_memory"]):
+            self.table['bag_words_in_memory'][insertion_index] = (x[:], y)
+        else:
+            self.table['bag_words_in_memory'].append((x[:],y))
+        insertion_index += 1
+        if insertion_index >= self.maximal_number_of_entries:
+            insertion_index = 0
+        self.table['insertion_index'] = insertion_index
+        self.save_tables()
 
     def predict(self, newitem):
         return classify_new_one_optimized(
-                self.table['wt'],
-                self.table['st'],
+                self.table['word_counts'],
+                self.table['sum_dict'],
                 newitem
         )
 

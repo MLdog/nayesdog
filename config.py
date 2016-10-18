@@ -1,5 +1,6 @@
 server_address = ('127.0.0.1', 8081)
 cssfile = 'css.css'
+"""
 feeds_url_dict = {
     'Nrsrch': 'http://feeds.nature.com/NatureLatestResearch',
     'Ncrrnt': 'http://feeds.nature.com/nature/rss/current',
@@ -13,6 +14,13 @@ feeds_url_dict = {
     'IEEE': 'http://spectrum.ieee.org/rss/fulltext',
     'Reddit': 'https://www.reddit.com/r/worldnews/.rss',
 }
-
+"""
+feeds_url_dict = {
+    'Nrsrch': 'http://feeds.nature.com/NatureLatestResearch',
+    'ATsc': 'http://feeds.arstechnica.com/arstechnica/science',
+    'Reddit': 'https://www.reddit.com/r/worldnews/.rss',
+}
 word_counts_database_file = './tables.py.gz'
 stopwords_file = './stopwords.txt'
+previous_session_database_file = '.previous_session'
+maximal_number_of_entries_in_memory = 30
