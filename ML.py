@@ -23,7 +23,7 @@ r = NaiveBayes()
 
 for fullpath in fullpaths:
     d = feedparser.parse(fullpath)
-    r.fit(d, labels)
+    r.fit_from_feed(d, labels)
 
 r.save_tables()
 

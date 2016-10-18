@@ -65,7 +65,7 @@ def nopunctuation(s):
     """
     return re.sub(' +',' ',
             re.sub('[^\w\s]','',
-                s.replace('\n', '').strip()
+                s.replace('\n', ' ').strip()
             )
            )
 
@@ -235,4 +235,34 @@ def transform_feed_dict(d):
 #    txts = list(txts)
 
     return dict(zip(ids, txts))
+
+def html_to_bag_of_words(html_code):
+    """
+    Converts piece of html code into bag of words
+    :param html_code: Piece of html code
+    :type html_code: String
+    :returns: Bag of words
+    :rtype: List of strings
+    """
+    bag_words = notags(html_code)
+    bag_words = bag_words.decode('utf-8').replace(u'\xa0', ' ')
+    bag_words = nopunctuation(bag_words)
+    bag_words = bag_words.lower()
+    return bag_words.split()
+
+
+def tranform_feed_entry_to_bag_of_words(entry):
+    """
+    Transform an entry into a bag of words
+    :param entry: RSS entry, this element should contain 5 keys: "title",
+    "content", "author", "time" and "link"
+    :type entry: Dict
+    :returns: Bag of words associated to entry
+    :rtype: List of strings 
+    """
+    title_bag_words =  html_to_bag_of_words(entry["title"])
+    content_bag_words = html_to_bag_of_words(entry["content"])
+    authors_bag_words = ["_".join(author.split()) for author in entry["authors"]]
+    return title_bag_words + content_bag_words + authors_bag_words
+    
 

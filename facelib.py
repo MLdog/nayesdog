@@ -1,14 +1,26 @@
 import feedparser
 import re
-#import html2text
-# entry_separation = '<hr style="height: 10px; color: #000">'
-from  urlparse import urlparse
-from doglib import file_to_str, simplify_html
+from urlparse import urlparse
+from doglib import (
+        file_to_str,
+        simplify_html,
+        tranform_feed_entry_to_bag_of_words
+        )
 import mimetypes
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer 
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import naylib
 import time
 import shelve
 import os
+from config import (
+        server_address,
+        cssfile,
+        feeds_url_dict,
+        previous_session_database_file,
+        word_counts_database_file,
+        maximal_number_of_entries_in_memory,
+        stopwords_file
+        )
 page_head_tpl = """
 <!DOCTYPE html><html><head>
   <meta charset="utf-8">
@@ -33,7 +45,8 @@ def preprocess_rss_feed(url):
     for entry in feed_parsed['entries']:
         entry_dic = {"title": "",
                      "content": "",
-                     "author": "",
+                     "authors": "",
+                     "link": "",
                      "time": str(time.time())}
         if "title" in entry:
             entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
@@ -259,17 +272,18 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             feed_name = entry_information["feed"]
             index = entry_information["index"]
             session_dict =shelve.open(self.server.previous_session,writeback=True)
-            print feed_name,self.server.current_preference_folder
             if preference == "Like":
                 entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if feed_name not in session_dict["preferences"][preference]:
                     session_dict["preferences"][preference][feed_name] = {}
                 session_dict["preferences"][preference][feed_name][index] = entry
-                # train dog here
+                x = tranform_feed_entry_to_bag_of_words(entry)
+                self.server.nayesdog.fit(x,1)
                 session_dict.close()
             if preference == "Dislike":
-                session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
-                # train dog here
+                entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                x = tranform_feed_entry_to_bag_of_words(entry)
+                self.server.nayesdog.fit(x,0)
             if preference in ["Delete"]:
                 session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
             if preference in ["Save"]:
@@ -317,6 +331,20 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         if key_id == len(keys) - 1:
             return to_anchor(feed_chosen+"_"+keys[key_id - 1])
         return to_anchor(feed_chosen+"_"+keys[key_id + 1])
+
+    """
+    # The information is in self.rfile.read(length)
+    # Then we will probably need to call the same functions as in do_GET
+    def do_POST(self):
+        request_path = self.path
+        print("\n----- Request post Start ----->\n")
+        print(request_path)
+        request_headers = self.headers
+        content_length = request_headers.getheaders('content-length')
+        length =int(content_length[0]) if content_length else 0
+        print(request_headers)
+        print(self.rfile.read(length))
+    """
 
     def do_GET(self):
         self.send_response(200)
@@ -384,7 +412,10 @@ class HTTPServerFeeds(HTTPServer):
                  HTTPServer_RequestHandler,
                  cssfile,
                  feeds_url_dict,
-                 previous_session=".previous_session"):
+                 previous_session,
+                 word_counts_database_file,
+                 stopwords_file,
+                 maximal_number_of_entries):
         """
         Generates an instance for HTTPServerFeeds that inheritates from
         HTTPServer class.
@@ -396,14 +427,16 @@ class HTTPServerFeeds(HTTPServer):
         :type server_address: Tuple.
         :type HTTPServer_RequestHandler: HTTPServer_RequestHandler class.
         :type cssfile: String.
-        :type feeds_url_dict: Dict.
-        """
+        :type feeds_url_dict: Dict."""
         HTTPServer.__init__(self, server_address, HTTPServer_RequestHandler)
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
         self.previous_session = previous_session
         self.current_preference_folder = "Home"
         self.feed_chosen = ""
+        self.nayesdog = naylib.NaiveBayes(word_counts_database_file,
+                                          stopwords_file,
+                                          maximal_number_of_entries)
         self.update_session()
 
     def update_session(self):
@@ -430,11 +463,14 @@ class HTTPServerFeeds(HTTPServer):
 
 
 def run():
-    from config import server_address, cssfile, feeds_url_dict
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
-                            feeds_url_dict)
+                            feeds_url_dict,
+                            previous_session_database_file,
+                            word_counts_database_file,
+                            stopwords_file,
+                            maximal_number_of_entries_in_memory)
     print('running server...')
     httpd.serve_forever()
 
