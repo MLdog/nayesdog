@@ -412,10 +412,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             # Represent each entry
             feed_chosen = self.server.feed_chosen
             if self.server.feed_chosen in feeds_menu_keys:
-                keys = dict_feeds[feed_chosen].keys()
-                for idx_key, key in enumerate(keys):
-                    entry = dict_feeds[feed_chosen][key]
-                    anchor = self.get_closest_element_anchor(keys,
+                dic_current_feed = dict_feeds[feed_chosen]
+                sorted_keys = self.server.rank_entries_by_preference(dic_current_feed)
+                for idx_key, key in enumerate(sorted_keys):
+                    entry = dic_current_feed[key]
+                    anchor = self.get_closest_element_anchor(sorted_keys,
                                                              idx_key,
                                                              feed_chosen)
                     id_entry = self.generate_id_entry(feed_chosen, key)
@@ -473,13 +474,14 @@ class HTTPServerFeeds(HTTPServer):
         if "preferences" not in session_dict:
             session_dict["preferences"] = {}
         if "seen_entries_keys" not in session_dict:
-            session_dict["seen_entries_keys"] = []
+            session_dict["seen_entries_keys"] = {}
         if "Like" not in session_dict["preferences"]:
             session_dict["preferences"]["Like"] = {}
         # if "Dislike" not in session_dict["preferences"]:
         #    session_dict["preferences"]["Dislike"] = {}
         if "Home" not in session_dict["preferences"]:
             session_dict["preferences"]["Home"] = {}
+        self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
         for feed in self.feeds_url_dict:
             received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
             for key, entry in received_entries.iteritems():
@@ -487,12 +489,26 @@ class HTTPServerFeeds(HTTPServer):
                     if feed not in session_dict["preferences"]["Home"]:
                         session_dict["preferences"]["Home"][feed] = {}
                     session_dict["preferences"]["Home"][feed][key] = entry
-                    session_dict["seen_entries_keys"].append(key)
                     x = tranform_feed_entry_to_bag_of_words(entry)
                     entry["prediction"] = self.nayesdog.predict(x)
+                session_dict["seen_entries_keys"][key] = 1
+        self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
         session_dict.close()
 
+    def initialize_each_seen_entry_as_useless(self, seen_entries_keys):
+        for key in seen_entries_keys:
+            seen_entries_keys[key] = 0
 
+    def prune_useless_stored_entries_keys(self,seen_entries_keys):
+        for key in seen_entries_keys.keys():
+            if not seen_entries_keys[key]:
+                seen_entries_keys.pop(key)
+
+    def rank_entries_by_preference(self,dict_entries):
+        get_prediction_from_entry = lambda k: dict_entries[k]["prediction"][1]
+        ranks = sorted(dict_entries, key=lambda k: get_prediction_from_entry, reverse=True)
+        return ranks
+        
 def run():
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
