@@ -186,7 +186,6 @@ class NaiveBayes:
 #        """
 #        word_counts = self.table["word_counts"]
 #        sum_dict = self.table["sum_dict"]
-#        P_x = constPx
 #        P_y_x = {}
 #        total_nb_words = sum(sum_dict.values())
 #
@@ -240,7 +239,6 @@ class NaiveBayes:
         """
         word_counts = self.table["word_counts"]
         sum_dict = self.table["sum_dict"]
-        P_x = constPx
         P_y_x = {}
         total_nb_words = sum(sum_dict.values())
 
@@ -255,30 +253,19 @@ class NaiveBayes:
         #import ipdb; ipdb.set_trace()
 
         for y in word_counts.keys():
-            prod_P_xi_y_numerator = 0.0
-            prod_P_xi_y_denominator = 0.0
-            P_x_numerator = 0.0
-            P_x_denominator = 0.0
+            prod_P_xi_y = 0.0
+            P_x = 0.0
             at_least_one_known_word = False
             for word in x:
                 if word in word_counts[y]:
                     if sum_dict[y] != 0:
                         at_least_one_known_word = True
-                        prod_P_xi_y_numerator += log( EPS + word_counts[y][word] )
-                        prod_P_xi_y_denominator += log( EPS + sum_dict[y] )
+                        prod_P_xi_y += log( EPS + word_counts[y][word] / sum_dict[y] )
                         if total_per_word[word] != 0:
-                            P_x_numerator += log( EPS + total_per_word[word] )
-                            P_x_denominator += log( EPS + total_nb_words )
+                            P_x += log( EPS + total_per_word[word] / total_nb_words )
 
             if not at_least_one_known_word:
                 P_y_x[y] = 0.0
             else:
-                P_y_x[y] = exp(
-                    sum_dict[y] + prod_P_xi_y_numerator + P_x_denominator +\
-                    -(prod_P_xi_y_denominator + total_nb_words + P_x_numerator)
-                )
-                P_y_x_numerator = exp( sum_dict[y] + prod_P_xi_y_numerator + P_x_denominator )
-                P_y_x_denominator = exp( prod_P_xi_y_denominator + total_nb_words + P_x_numerator )
-                print P_y_x_numerator, P_y_x_denominator
-                print exp(P_x_numerator), exp(P_x_denominator)
+                P_y_x[y] = exp( sum_dict[y] - total_nb_words + prod_P_xi_y - P_x )
         return P_y_x
