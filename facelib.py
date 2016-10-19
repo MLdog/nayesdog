@@ -391,7 +391,12 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(page_head_tpl)
-            self.wfile.write('<body><div class="ontop"><a href="#" onclick="javascript:imtoggle()">Toggle images</a></div>')
+            self.wfile.write('''<body>
+                <div class="ontop">
+                    <a href="#" onclick="javascript:imtoggle()">Toggle images</a><br>
+                    <a href="/Learn">Learn</a>
+                </div>
+            ''')
             # Generate preferences menu
             session_dict = shelve.open(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
