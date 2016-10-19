@@ -53,6 +53,11 @@ body{
     background-color: black;
     height: 0.1px;
 }
+.ontop {
+    position: fixed;
+    margin-left: -150px;
+}
+
 img {
     max-width:100%;
     max-height:100%;

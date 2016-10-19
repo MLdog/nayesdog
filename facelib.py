@@ -218,7 +218,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         menu = generate_html_table(menu)
         menu = to_div("menu_bar", menu)
         menu += to_span("menu_bar_separator", generate_horizontal_rule())
-        menu += '<a href="#" onclick="javascript:imtoggle()">Toggle images</a>'
         return menu
 
     def generate_save_delete_option(self,
@@ -392,7 +391,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(page_head_tpl)
-            self.wfile.write('<body>')
+            self.wfile.write('<body><div class="ontop"><a href="#" onclick="javascript:imtoggle()">Toggle images</a></div>')
             # Generate preferences menu
             session_dict = shelve.open(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
