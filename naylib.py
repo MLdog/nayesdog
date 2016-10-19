@@ -172,6 +172,60 @@ class NaiveBayes:
         )
         """
 
+#    def compute_probabilities_one_entry(self, x):
+#        """
+#        Compute the probabilities that the given entry belongs to each one of
+#        the existing classes. P_x denote here the probability to observe the
+#        set of words x. P_y_x denotes the probability that the entry belongs to
+#        class y given the set of words x it contains. 
+#        :param x: Bag of words
+#        :type x: List of Strings
+#        :returns: Probabilities of membership of the current entry to each one
+#        of the possible classes
+#        :rtype: Dict.
+#        """
+#        word_counts = self.table["word_counts"]
+#        sum_dict = self.table["sum_dict"]
+#        P_x = constPx
+#        P_y_x = {}
+#        total_nb_words = sum(sum_dict.values())
+#
+#        total_per_word = dict()
+#        for y in word_counts.keys():
+#            for word,count in word_counts[y].items():
+#                if word in total_per_word.keys():
+#                    total_per_word[word] += count
+#                else:
+#                    total_per_word[word] = 0.0
+#
+#        #import ipdb; ipdb.set_trace()
+#
+#        for y in word_counts.keys():
+#            prod_P_xi_y_numerator = 1.0
+#            prod_P_xi_y_denominator = 1.0
+#            P_x_numerator = 1.0
+#            P_x_denominator = 1.0
+#            at_least_one_known_word = False
+#            for word in x:
+#                if word in word_counts[y]:
+#                    if sum_dict[y] != 0:
+#                        at_least_one_known_word = True
+#                        prod_P_xi_y_numerator *= word_counts[y][word]
+#                        prod_P_xi_y_denominator *= sum_dict[y]
+#                        if total_per_word[word] != 0:
+#                            P_x_numerator *= total_per_word[word]
+#                            P_x_denominator *= total_nb_words
+#
+#            if not at_least_one_known_word:
+#                P_y_x[y] = 0.0
+#            else:
+#                P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator * P_x_denominator
+#                P_y_x_denominator = prod_P_xi_y_denominator * total_nb_words * P_x_numerator
+#                P_y_x[y] = P_y_x_numerator / P_y_x_denominator
+#                print P_y_x_numerator, P_y_x_denominator
+#                print P_x_numerator, P_x_denominator
+#        return P_y_x
+
     def compute_probabilities_one_entry(self, x):
         """
         Compute the probabilities that the given entry belongs to each one of
@@ -201,25 +255,30 @@ class NaiveBayes:
         #import ipdb; ipdb.set_trace()
 
         for y in word_counts.keys():
-            prod_P_xi_y_numerator = 1.0
-            prod_P_xi_y_denominator = 1.0
-            P_x_numerator = 1.0
-            P_x_denominator = 1.0
+            prod_P_xi_y_numerator = 0.0
+            prod_P_xi_y_denominator = 0.0
+            P_x_numerator = 0.0
+            P_x_denominator = 0.0
             at_least_one_known_word = False
             for word in x:
                 if word in word_counts[y]:
                     if sum_dict[y] != 0:
                         at_least_one_known_word = True
-                        prod_P_xi_y_numerator *= word_counts[y][word]
-                        prod_P_xi_y_denominator *= sum_dict[y]
+                        prod_P_xi_y_numerator += log( EPS + word_counts[y][word] )
+                        prod_P_xi_y_denominator += log( EPS + sum_dict[y] )
                         if total_per_word[word] != 0:
-                            P_x_numerator *= total_per_word[word]
-                            P_x_denominator *= total_nb_words
+                            P_x_numerator += log( EPS + total_per_word[word] )
+                            P_x_denominator += log( EPS + total_nb_words )
 
             if not at_least_one_known_word:
                 P_y_x[y] = 0.0
             else:
-                P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator * P_x_denominator
-                P_y_x_denominator = prod_P_xi_y_denominator * total_nb_words * P_x_numerator
-                P_y_x[y] = P_y_x_numerator / P_y_x_denominator
+                P_y_x[y] = exp(
+                    sum_dict[y] + prod_P_xi_y_numerator + P_x_denominator +\
+                    -(prod_P_xi_y_denominator + total_nb_words + P_x_numerator)
+                )
+                P_y_x_numerator = exp( sum_dict[y] + prod_P_xi_y_numerator + P_x_denominator )
+                P_y_x_denominator = exp( prod_P_xi_y_denominator + total_nb_words + P_x_numerator )
+                print P_y_x_numerator, P_y_x_denominator
+                print exp(P_x_numerator), exp(P_x_denominator)
         return P_y_x
