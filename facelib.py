@@ -35,6 +35,19 @@ page_head_tpl = """
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
+  <script>
+  function imtoggle() {
+      var images = document.getElementsByTagName('img');
+      if (images[0].style.display != "none") {
+          var style = "none";
+      } else {
+          var style = "inline";
+      }
+      for (i = 0; i < images.length;i++ ) {
+          images[i].style.display = style;
+      }
+  }
+  </script>
 </head>
 """
 
@@ -205,6 +218,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         menu = generate_html_table(menu)
         menu = to_div("menu_bar", menu)
         menu += to_span("menu_bar_separator", generate_horizontal_rule())
+        menu += '<a href="#" onclick="javascript:imtoggle()">Toggle images</a>'
         return menu
 
     def generate_save_delete_option(self,

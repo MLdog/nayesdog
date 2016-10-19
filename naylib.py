@@ -195,14 +195,15 @@ class NaiveBayes:
             at_least_one_known_word = False
             for word in x:
                 if word in word_counts[y]:
-                    prod_P_xi_y_numerator *= word_counts[y][word]
-                    prod_P_xi_y_denominator *= sum_dict[y]
-                    at_least_one_known_word = True
+                    if sum_dict[y] !=0:
+                        prod_P_xi_y_numerator *= word_counts[y][word]
+                        prod_P_xi_y_denominator *= sum_dict[y]
+                        at_least_one_known_word = True
             if not at_least_one_known_word:
                 P_y_x[y] = 0.0
             else:
-                P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator  
+                P_y_x_numerator = sum_dict[y] * prod_P_xi_y_numerator
                 P_y_x_denominator = prod_P_xi_y_denominator * total_nb_words * P_x
-                P_y_x[y] = P_y_x_numerator * 1./P_y_x_denominator   
+                P_y_x[y] = P_y_x_numerator / P_y_x_denominator
         return P_y_x
 
