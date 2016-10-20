@@ -1,8 +1,8 @@
 """
 SimpleShelve
 
-A hacky replacement for shelve module (uses eval function)
-supports OrderedDicts and any standard python datatype
+A replacement for shelve module (uses pickle+gzip)
+supports any standard python datatype
 
 Copyright Ilya Prokin 2016
 
@@ -24,10 +24,8 @@ Usage example:
 import os
 import pickle
 import gzip
-#from collections import OrderedDict # has to be here even that it is not used in code
 
 
-# two dumb simple save/load in transparent format
 def save_object_simple(outfilename, obj):
     s = repr(obj)
     #with open(outfilename, 'w') as f:
@@ -35,7 +33,6 @@ def save_object_simple(outfilename, obj):
         pickle.dump(obj, f)
 
 
-# OrderedDict has to be defined, otherwise EVAL won't load it from file
 def load_object_simple(filename):
     #with open(filename, 'r') as f:
     with gzip.open(filename, 'rb') as f:
