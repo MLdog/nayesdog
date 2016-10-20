@@ -489,10 +489,9 @@ class HTTPServerFeeds(HTTPServer):
                     if feed not in session_dict["preferences"]["Home"]:
                         session_dict["preferences"]["Home"][feed] = {}
                     session_dict["preferences"]["Home"][feed][key] = entry
-                    x = tranform_feed_entry_to_bag_of_words(entry)
-                    entry["prediction"] = self.nayesdog.predict(x)
-                    print 'entry["prediction"] = {}'.format(entry["prediction"])
                 session_dict["seen_entries_keys"][key] = 1
+        for feed in session_dict["preferences"]["Home"]:
+            self.predict_entries_in_dict(session_dict["preferences"]["Home"][feed])
         self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
         session_dict.close()
 
@@ -509,7 +508,13 @@ class HTTPServerFeeds(HTTPServer):
         get_prediction_from_entry = lambda k: dict_entries[k]["prediction"][1]
         ranks = sorted(dict_entries, key=get_prediction_from_entry, reverse=True)
         return ranks
-        
+
+    def predict_entries_in_dict(self,dict_entries):
+        for key,entry in dict_entries.iteritems():
+            print entry.keys()
+            x = tranform_feed_entry_to_bag_of_words(entry)
+            dict_entries[key]["prediction"] = self.nayesdog.predict(x)
+            print 'entry["prediction"] = {}'.format(entry["prediction"])
 def run():
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
