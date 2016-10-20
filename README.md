@@ -34,7 +34,5 @@ check folders:
 
 ## To-do
 
-* Convert word_counts to Sergio's datastruct (Ilya)
 * Soring based on prediction in facelib (Sergio)
 * Menu in facelib
-* Conditional output in naylib
