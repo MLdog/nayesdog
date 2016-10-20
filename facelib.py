@@ -13,7 +13,7 @@ from doglib import (
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import naylib
 import time
-import shelve
+from simpleshelve import SimpleShelve as shelve
 import os
 from config import (
         server_address,
@@ -43,7 +43,7 @@ page_head_tpl = """
       } else {
           var style = "inline";
       }
-      for (i = 0; i < images.length;i++ ) {
+      for (i = 0; i < images.length; i++ ) {
           images[i].style.display = style;
       }
   }
@@ -294,7 +294,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             entry_information = self.extract_data_from_id_entry(component)
             feed_name = entry_information["feed"]
             index = entry_information["index"]
-            session_dict = shelve.open(self.server.previous_session, writeback=True)
+            session_dict = shelve(self.server.previous_session)
             if index in session_dict["preferences"][self.server.current_preference_folder][feed_name].keys():
                 if preference == "Like":
                     entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
@@ -343,7 +343,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def update_feed_or_preference_folder(self):
         folder = self.extract_chosen_feed_from_path()
-        session_dict = shelve.open(self.server.previous_session)
+        session_dict = shelve(self.server.previous_session)
         if folder in session_dict["preferences"].keys():
             self.server.current_preference_folder = folder
             self.server.feed_chosen = ""
@@ -398,7 +398,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 </div>
             ''')
             # Generate preferences menu
-            session_dict = shelve.open(self.server.previous_session)
+            session_dict = shelve(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
             preference_menu = self.generate_header(preference_menu_keys)
             self.wfile.write(preference_menu)
@@ -470,7 +470,7 @@ class HTTPServerFeeds(HTTPServer):
         self.update_session()
 
     def update_session(self):
-        session_dict = shelve.open(self.previous_session, writeback=True)
+        session_dict = shelve(self.previous_session)
         if "preferences" not in session_dict:
             session_dict["preferences"] = {}
         if "seen_entries_keys" not in session_dict:
@@ -514,6 +514,8 @@ class HTTPServerFeeds(HTTPServer):
             x = tranform_feed_entry_to_bag_of_words(entry)
             dict_entries[key]["prediction"] = self.nayesdog.predict(x)
             #print 'entry["prediction"] = {}'.format(entry["prediction"])
+
+
 def run():
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,

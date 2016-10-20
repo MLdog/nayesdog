@@ -56,7 +56,7 @@ class SimpleShelve:
         save_object_simple(self.filepath, self.data)
 
     def close(self, sync=True):
-        if self.dict is None:
+        if self.data is None:
             return
         try:
             if sync:
@@ -71,6 +71,9 @@ class SimpleShelve:
 
     def __del__(self):
         self.close(sync=self.write_on_destroy)
+
+    def __contains__(self, key):
+        return key in self.data
 
     def __getitem__(self, key):
         try:
