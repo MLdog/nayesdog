@@ -34,13 +34,7 @@ check folders:
 
 ## To-do
 
-* Modify word_counts dict word_counts[0] and word_counts[1] contain the same keys
-* Add any to-do we discussed but didn't put here.
-* Modify predict and classify_new_one_optimized in order to make one method belonging to the class NaiveBayes
-* Add a list of pairs [(id_entry, prediction) ] to each feed in "Home". In order to present the feeds ordered by their rank (in face lib.py)
-* As soon as we start the program make the classifier predict the user preference on each entry in "Home"
-    - sort entries based on P(1|x)-P(0|x)
-* Modify the do_GET method in order to present the feeds ordered by their ranks
-* Put more explicit names to classify_new_one_optimized (MB we eventually remove it)
-* We should check if the function is ok ... I think I wrote exactly the same function you did but we need to be sure (sergio) 
-    - seems to be ok with LOG, checkout commits: b1f1933ec8628594860282ca5ad687e8e62c8b69 and 2a1be82869543a349d3bd2ab70944cc849681fdc
+* Convert word_counts to Sergio's datastruct (Ilya)
+* Soring based on prediction in facelib (Sergio)
+* Menu in facelib
+* Conditional output in naylib
