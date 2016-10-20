@@ -491,6 +491,7 @@ class HTTPServerFeeds(HTTPServer):
                     session_dict["preferences"]["Home"][feed][key] = entry
                     x = tranform_feed_entry_to_bag_of_words(entry)
                     entry["prediction"] = self.nayesdog.predict(x)
+                    print 'entry["prediction"] = {}'.format(entry["prediction"])
                 session_dict["seen_entries_keys"][key] = 1
         self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
         session_dict.close()

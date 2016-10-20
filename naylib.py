@@ -92,7 +92,8 @@ class NaiveBayes:
                     self.table['word_counts'][word][y] += 1.0
                     self.table['sum_for_classes'][y] += 1.0
                 else:
-                    self.table['word_counts'][word] = [0.0]*self.num_classes
+                    self.table['word_counts'][word] = [1.0]*self.num_classes
+                    self.table['sum_for_classes'] = list(map(lambda x: x+1.0, self.table['sum_for_classes']))
         insertion_index = self.table['insertion_index']
         self.remove_oldest_entry()
         if insertion_index < len(self.table["bag_words_in_memory"]):
