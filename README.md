@@ -34,5 +34,7 @@ check folders:
 
 ## To-do
 
-* Soring based on prediction in facelib (Sergio)
-* Menu in facelib
+* Test and spot bugs
+* Menu in facelib (javascript)
+* setup
+* replace shelves (?)
