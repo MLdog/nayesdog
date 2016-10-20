@@ -9,7 +9,6 @@ from config import word_counts_database_file, stopwords_file
 
 
 EPS = 1e-12
-constPx = 1e-3 # prob to have a word in an item
 MAXNBENTRIES = 300
 NUMCLASSES = 2
 
