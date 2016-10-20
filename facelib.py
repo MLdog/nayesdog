@@ -506,7 +506,7 @@ class HTTPServerFeeds(HTTPServer):
 
     def rank_entries_by_preference(self,dict_entries):
         get_prediction_from_entry = lambda k: dict_entries[k]["prediction"][1]
-        ranks = sorted(dict_entries, key=lambda k: get_prediction_from_entry, reverse=True)
+        ranks = sorted(dict_entries, key=get_prediction_from_entry, reverse=True)
         return ranks
         
 def run():
