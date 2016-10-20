@@ -123,7 +123,7 @@ class NaiveBayes:
                   'log(P(y|x)-log(P|y)',
                   'log(P(y=a|x)-log(P(y=b|x)',
                   'log(P(y|x))'
-                 ][0], # string or list of strings
+                 ][2], # string or list of strings
             ab=(1,0) # used only when mode=="log_P_a_x-log_P_b_x"
             ):
         """
@@ -131,7 +131,7 @@ class NaiveBayes:
         the existing classes. P_x denote here the probability to observe the
         set of words x. P_y_x denotes the probability that the entry belongs to
         class y given the set of words x it contains. 
-        :param x: Bag of wordlllllllllllllllls
+        :param x: Bag of words
         :type x: List of Strings
         :returns: Probabilities of membership of the current entry to each one
         of the possible classes
@@ -178,8 +178,7 @@ class NaiveBayes:
                 outputs['P(y|x)'][y] = exp( outputs['log(P(y|x))'][y] )
                 outputs['log(P(y|x)-log(P|y)'][y] = log_prod_P_xi_y - log_P_x
 
-        outputs['log(P(y=a|x)-log(P=b|y)'] = outputs['log(P(y|x))'][ab[0]] - outputs['log(P(y|x))'][ab[1]]
-
+        outputs['log(P(y=a|x)-log(P(y=b|x)'] = outputs['log(P(y|x))'][ab[0]] - outputs['log(P(y|x))'][ab[1]]
         if isinstance(mode, list):
             return [outputs[m] for m in mode]
         else:

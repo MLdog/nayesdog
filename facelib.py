@@ -179,8 +179,8 @@ def represent_rss_entry(entry, key_entry):
         s += to_span("content",entry["content"])
     if "prediction" in entry:
         prediction = entry["prediction"]
-        s += "P(Dislike) = "+str(prediction[0])+"<br>\n"
-        s += "P(Like) = "+str(prediction[1])+"<br>\n"
+        s += "Score = "+str(prediction)+"<br>\n"
+        #s += "P(Like) = "+str(prediction[1])+"<br>\n"
     s = to_div("entry",s,key_entry)
     return s
 
@@ -505,16 +505,15 @@ class HTTPServerFeeds(HTTPServer):
                 seen_entries_keys.pop(key)
 
     def rank_entries_by_preference(self,dict_entries):
-        get_prediction_from_entry = lambda k: dict_entries[k]["prediction"][1]
+        get_prediction_from_entry = lambda k: dict_entries[k]["prediction"]
         ranks = sorted(dict_entries, key=get_prediction_from_entry, reverse=True)
         return ranks
 
     def predict_entries_in_dict(self,dict_entries):
         for key,entry in dict_entries.iteritems():
-            print entry.keys()
             x = tranform_feed_entry_to_bag_of_words(entry)
             dict_entries[key]["prediction"] = self.nayesdog.predict(x)
-            print 'entry["prediction"] = {}'.format(entry["prediction"])
+            #print 'entry["prediction"] = {}'.format(entry["prediction"])
 def run():
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
