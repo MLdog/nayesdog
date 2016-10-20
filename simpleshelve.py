@@ -22,8 +22,9 @@ Usage example:
 """
 
 import os
+import pickle
 import gzip
-from collections import OrderedDict # has to be here even that it is not used in code
+#from collections import OrderedDict # has to be here even that it is not used in code
 
 
 # two dumb simple save/load in transparent format
@@ -31,15 +32,15 @@ def save_object_simple(outfilename, obj):
     s = repr(obj)
     #with open(outfilename, 'w') as f:
     with gzip.open(outfilename, 'wb') as f:
-        f.write(s.encode())
+        pickle.dump(obj, f)
 
 
 # OrderedDict has to be defined, otherwise EVAL won't load it from file
 def load_object_simple(filename):
     #with open(filename, 'r') as f:
     with gzip.open(filename, 'rb') as f:
-        s = f.read()
-    return eval(s)
+        obj = pickle.load(f)
+    return obj
 
 
 class SimpleShelve:
