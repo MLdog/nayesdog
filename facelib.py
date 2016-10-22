@@ -47,6 +47,24 @@ page_head_tpl = """
           images[i].style.display = style;
       }
   }
+  function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+  }
+
+  function filterFunction() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("myDropdown");
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
+    }
+  }
   </script>
 </head>
 """
@@ -165,6 +183,22 @@ def to_body(element):
     s += '</body>\n'
     return s
 
+def generate_html_button(function,button_class,text):
+    s = "<button " 
+    s += "onclick=\""+function+"\" "
+    s += "class=\""+button_class+"\"> "
+    s += text
+    s += "</button>"
+    return s
+
+def generate_input_text(input_type,placeholder,input_id,function):
+    s = "<input "
+    s += "type=\""+input_type+"\" "
+    s += "placeholder=\""+placeholder+"\" "
+    s += "id=\""+input_id+"\" "
+    s += "onkeyup=\""+function+"\">"
+    return s
+
 def represent_rss_entry(entry, key_entry):
     s = ""
     if "title" in entry:
@@ -187,6 +221,14 @@ def represent_rss_entry(entry, key_entry):
 def to_anchor(element):
     return "\"#"+element+"\""
 
+def generate_html_break_line():
+    return "<br>"
+
+def to_header(header_level,element):
+    s = "<h"+str(header_level)+">" 
+    s += element
+    s += "</h"+str(header_level)+">" 
+    return s
 
 class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
@@ -218,6 +260,17 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         menu = generate_html_table(menu)
         menu = to_div("menu_bar", menu)
         menu += to_span("menu_bar_separator", generate_horizontal_rule())
+        return menu
+
+    def generate_feeds_menu(self, list_rss_feeds):
+        dropdown = generate_input_text("text","Search..","myInput","filterFunction()")
+        for feed in list_rss_feeds:
+            menu_element = generate_link(feed, feed)
+            dropdown += menu_element
+        dropdown = to_div("dropdown-content",dropdown,"myDropdown")
+        button = generate_html_button("myFunction()","dropbtn","News")
+        menu = button + dropdown
+        menu = to_div("dropdown",menu)
         return menu
 
     def generate_save_delete_option(self,
@@ -356,6 +409,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             return to_anchor(feed_chosen+"_"+keys[key_id - 1])
         return to_anchor(feed_chosen+"_"+keys[key_id + 1])
 
+
     """
     # The information is in self.rfile.read(length)
     # Then we will probably need to call the same functions as in do_GET
@@ -400,17 +454,30 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             # Generate preferences menu
             session_dict = shelve.open(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
-            preference_menu = self.generate_header(preference_menu_keys)
+            preference_menu = ""
+            for preference in preference_menu_keys:
+                menu_element = generate_link(preference, preference)
+                if preference == self.server.current_preference_folder:
+                    menu_element = to_span("selected_link", menu_element)
+                else:
+                    menu_element = to_span("unselected_link", menu_element)
+                
+                menu_element = to_div(preference+"menu",menu_element)
+                preference_menu += menu_element
+            #preference_menu = self.generate_header(preference_menu_keys)
             self.wfile.write(preference_menu)
             # Generate feeds menu in the current preference menu
             current_preference = self.server.current_preference_folder
             dict_feeds = session_dict["preferences"][current_preference]
             feeds_menu_keys = dict_feeds.keys()
-            feeds_menu = self.generate_header(feeds_menu_keys)
+            #feeds_menu = self.generate_header(feeds_menu_keys)
+            feeds_menu = self.generate_feeds_menu(feeds_menu_keys)
             self.wfile.write(feeds_menu)
-            session_dict.close()
-            # Represent each entry
+            self.wfile.write(to_header(1,current_preference))
             feed_chosen = self.server.feed_chosen
+            self.wfile.write(to_header(2,feed_chosen))
+            self.wfile.write(self.generate_entry_separator())
+            session_dict.close()
             if self.server.feed_chosen in feeds_menu_keys:
                 dic_current_feed = dict_feeds[feed_chosen]
                 sorted_keys = self.server.rank_entries_by_preference(dic_current_feed)

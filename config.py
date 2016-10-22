@@ -16,9 +16,10 @@ feeds_url_dict = {
 }
 """
 feeds_url_dict = {
-    'Nrsrch': 'http://feeds.nature.com/NatureLatestResearch',
-    'ATsc': 'http://feeds.arstechnica.com/arstechnica/science',
+    'Nature Research': 'http://feeds.nature.com/NatureLatestResearch',
+    'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
     'Reddit': 'https://www.reddit.com/r/worldnews/.rss',
+    'IEEE': 'http://spectrum.ieee.org/rss/fulltext',
 }
 word_counts_database_file = './tables.py.gz'
 stopwords_file = './stopwords.txt'
