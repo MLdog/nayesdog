@@ -39,9 +39,6 @@ def simplify_html(s):
     for tag in ['div', 'span']:
         s = re.sub('<{tag}[^>]*>'.format(tag=tag), '', s)
         s = re.sub('</{tag}[^>]*>'.format(tag=tag), '', s)
-    # those are not present in XML, right?
-    #for tag in ['script', 'noscript']:
-    #    s = re.compile('<{tag}[^>]*>[^<]+</{tag}>'.format(tag=tag), flags=re.MULTILINE).sub('', s)
     return s
 
 def notags(s):
@@ -102,29 +99,11 @@ def feed_to_md_file(d, fpath):
     :type fpath: string
     """
     #mds = [s for s in map(to_readable_md, d['entries']) if s != '']
-    mds = filter(lambda s: s != '', map(to_readable_md, d['entries']))
     mds = list(filter(lambda s: s != '', map(to_readable_md, d['entries'])))
     md = '\n\n-------------\n\n'.join(mds)
     md = '# ' + d['feed']['title'] + '\n\n' + re.sub('([#]+)', r'\1#', md)
-    #print(md)
     with open(fpath, 'w') as f:
         f.write(md)
-
-
-# DELETE THIS FUNCTION
-def ids_to_file(path, files, outfullpath):
-    # make file with ids
-
-    fullpaths = map(lambda f: os.path.join(path, f), infiles)
-    s = ''
-    for fullpath in fullpaths:
-        d = feedparser.parse(fullpath)
-        ids = [e['id'] for e in d['entries']]
-        s += ' \n'.join(ids)
-        s += '\n'
-
-    with open(outfullpath, 'w') as f:
-        f.write(s)
 
 
 def rating_from_md_file(mdfile):

@@ -5,7 +5,6 @@ from simpleshelve import save_object_simple, load_object_simple
 from doglib import file_to_str, transform_feed_dict
 
 from config import word_counts_database_file, stopwords_file
-#from simpleshelve import SimpleShelve
 
 
 EPS = 1e-12
@@ -42,18 +41,6 @@ class NaiveBayes:
     
     def save_tables(self):
         save_object_simple(self.db_file, self.table)
-
-    # def fit_from_feed(self, d, labels):
-    #     d_idstxts = transform_feed_dict(d)
-    #     for k in d_idstxts.keys():
-    #         if k in labels.keys():
-    #             for word in d_idstxts[k]:
-    #                 if word not in self.stopwords:
-    #                     if word in self.table['word_counts'][labels[k]].keys():
-    #                         self.table['word_counts'][labels[k]][word] += 1.0
-    #                         self.table['sum_for_classes'][labels[k]] += 1.0
-    #                     else:
-    #                         self.table['word_counts'][labels[k]][word] = 0.0
 
     def sort_word_tables(self):
         # sort word_counts table based on log(P(y|x)-log(P(y))
@@ -104,8 +91,7 @@ class NaiveBayes:
         if insertion_index >= self.maximal_number_of_entries:
             insertion_index = 0
         self.table['insertion_index'] = insertion_index
-        #self.sort_word_tables()
-
+        self.sort_word_tables()
         self.save_tables()
 
     def predict(self, X, Y=None):

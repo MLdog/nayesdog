@@ -1,7 +1,5 @@
 import feedparser
 import re
-#import html2text
-# entry_separation = '<hr style="height: 10px; color: #000">'
 from naylib import NaiveBayes
 from urlparse import urlparse
 import mimetypes
@@ -218,7 +216,6 @@ def represent_rss_entry(entry, key_entry):
     if "prediction" in entry:
         prediction = entry["prediction"]
         s += "Score = "+str(prediction)+"<br>\n"
-        #s += "P(Like) = "+str(prediction[1])+"<br>\n"
     s = to_div("entry",s,key_entry)
     return s
 
@@ -413,24 +410,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             return to_anchor(feed_chosen+"_"+keys[key_id - 1])
         return to_anchor(feed_chosen+"_"+keys[key_id + 1])
 
-
-    """
-    # The information is in self.rfile.read(length)
-    # Then we will probably need to call the same functions as in do_GET
-    def do_POST(self):
-        request_path = self.path
-        print("\n----- Request post Start ----->\n")
-        print(request_path)
-        request_headers = self.headers
-        content_length = request_headers.getheaders('content-length')
-        length =int(content_length[0]) if content_length else 0
-        print(request_headers)
-        print(self.rfile.read(length))
-    """
-
     def do_GET(self):
         self.send_response(200)
-        # import pdb; pdb.set_trace()
         mimetype, _ = mimetypes.guess_type(self.path)
         if self.path == '/'+self.server.cssfile:
             self.send_header('Content-type', mimetype)
@@ -463,7 +444,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 
                 menu_element = to_div(preference+"menu",menu_element)
                 preference_menu += menu_element
-            #preference_menu = self.generate_header(preference_menu_keys)
             toggle_images_link = generate_link("#", "Toggle images", "javascript:imtoggle()")
             toggle_images_link = to_span("toggle_images", toggle_images_link)
             preference_menu += toggle_images_link
@@ -475,7 +455,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             current_preference = self.server.current_preference_folder
             dict_feeds = session_dict["preferences"][current_preference]
             feeds_menu_keys = dict_feeds.keys()
-            #feeds_menu = self.generate_header(feeds_menu_keys)
             feeds_menu = self.generate_feeds_menu(feeds_menu_keys)
             self.wfile.write(feeds_menu)
             self.wfile.write(to_header(1,current_preference))
@@ -551,8 +530,6 @@ class HTTPServerFeeds(HTTPServer):
             session_dict["seen_entries_keys"] = {}
         if "Like" not in session_dict["preferences"]:
             session_dict["preferences"]["Like"] = {}
-        # if "Dislike" not in session_dict["preferences"]:
-        #    session_dict["preferences"]["Dislike"] = {}
         if "Home" not in session_dict["preferences"]:
             session_dict["preferences"]["Home"] = {}
         self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
@@ -587,7 +564,6 @@ class HTTPServerFeeds(HTTPServer):
         for key,entry in dict_entries.iteritems():
             x = tranform_feed_entry_to_bag_of_words(entry)
             dict_entries[key]["prediction"] = self.nayesdog.predict(x)
-            #print 'entry["prediction"] = {}'.format(entry["prediction"])
 
 def filter_previous_session_file_after_config_update(previous_session_file):
     session_dict = shelve.open(previous_session_file, writeback=True)
