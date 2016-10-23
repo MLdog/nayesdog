@@ -18,7 +18,7 @@ feeds_url_dict = {
 feeds_url_dict = {
     'Nature Research': 'http://feeds.nature.com/NatureLatestResearch',
     'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
-    'Reddit': 'https://www.reddit.com/r/worldnews/.rss',
+    'Science': 'http://www.sciencemag.org/rss/current.xml',
     'IEEE': 'http://spectrum.ieee.org/rss/fulltext',
 }
 word_counts_database_file = './tables.py.gz'

@@ -56,13 +56,13 @@ class NaiveBayes:
     #                         self.table['word_counts'][labels[k]][word] = 0.0
 
     def sort_word_tables(self):
-        # sort word_counts table based on log(P(y|x)-log(P|y)
+        # sort word_counts table based on log(P(y|x)-log(P(y))
         self.table['word_counts'] = OrderedDict(
             sorted(
                 self.table['word_counts'].items(),
                 key=lambda x: self.compute_probabilities_one_entry(
                     x[0],
-                    mode='log(P(y|x)-log(P|y)'
+                    mode='log(P(y|x)-log(P(y))'
                 )
             )
         )
@@ -120,7 +120,7 @@ class NaiveBayes:
 
     def compute_probabilities_one_entry(self, x,
             mode=['P(y|x)',
-                  'log(P(y|x)-log(P|y)',
+                  'log(P(y|x)-log(P(y))',
                   'log(P(y=a|x)-log(P(y=b|x)',
                   'log(P(y|x))'
                  ][2], # string or list of strings
@@ -138,7 +138,7 @@ class NaiveBayes:
         :rtype: Dict.
         """
         allowed=['P(y|x)',
-                 'log(P(y|x)-log(P|y)',
+                 'log(P(y|x)-log(P(y))',
                  'log(P(y=a|x)-log(P(y=b|x)',
                  'log(P(y|x))'
                 ]
@@ -172,11 +172,11 @@ class NaiveBayes:
             if not at_least_one_known_word:
                 outputs['log(P(y|x))'][y] = log( EPS )
                 outputs['P(y|x)'][y] = 0.0
-                outputs['log(P(y|x)-log(P|y)'][y] = log_prod_P_xi_y - log_P_x
+                outputs['log(P(y|x)-log(P(y))'][y] = log_prod_P_xi_y - log_P_x
             else:
                 outputs['log(P(y|x))'][y] = log( EPS + sum_for_classes[y] / total_nb_words ) + log_prod_P_xi_y - log_P_x
                 outputs['P(y|x)'][y] = exp( outputs['log(P(y|x))'][y] )
-                outputs['log(P(y|x)-log(P|y)'][y] = log_prod_P_xi_y - log_P_x
+                outputs['log(P(y|x)-log(P(y))'][y] = log_prod_P_xi_y - log_P_x
 
         outputs['log(P(y=a|x)-log(P(y=b|x)'] = outputs['log(P(y|x))'][ab[0]] - outputs['log(P(y|x))'][ab[1]]
         if isinstance(mode, list):

@@ -69,6 +69,13 @@ page_head_tpl = """
 </head>
 """
 
+extra_fixed_menu_elements = '''
+<div class="ontop">
+    <a href="#" onclick="javascript:imtoggle()">Toggle images</a><br>
+    <a href="/Learn">Learn</a>
+</div>
+'''
+
 def generate_entry_id(id_entry):
     return re.sub('[^a-zA-Z0-9]+', '', id_entry)
 
@@ -445,12 +452,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(page_head_tpl)
-            self.wfile.write('''<body>
-                <div class="ontop">
-                    <a href="#" onclick="javascript:imtoggle()">Toggle images</a><br>
-                    <a href="/Learn">Learn</a>
-                </div>
-            ''')
+            self.wfile.write('''<body>''')
             # Generate preferences menu
             session_dict = shelve.open(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
@@ -465,6 +467,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 menu_element = to_div(preference+"menu",menu_element)
                 preference_menu += menu_element
             #preference_menu = self.generate_header(preference_menu_keys)
+            preference_menu += extra_fixed_menu_elements
             self.wfile.write(preference_menu)
             # Generate feeds menu in the current preference menu
             current_preference = self.server.current_preference_folder
