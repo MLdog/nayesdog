@@ -69,12 +69,6 @@ page_head_tpl = """
 </head>
 """
 
-extra_fixed_menu_elements = '''
-<div class="ontop">
-    <a href="#" onclick="javascript:imtoggle()">Toggle images</a><br>
-    <a href="/Learn">Learn</a>
-</div>
-'''
 
 def generate_entry_id(id_entry):
     return re.sub('[^a-zA-Z0-9]+', '', id_entry)
@@ -151,8 +145,11 @@ def to_span(span, element):
     s += "</span>\n"
     return s
 
-def generate_link(href, name):
-    s = "<a href=\""+href+"\">\n"
+def generate_link(href, name, function=None):
+    s = "<a href=\""+href+"\""
+    if function is not None:
+        s += " onclick=\""+function+"\""    
+    s += ">\n"
     s += name+"\n"
     s += "</a>\n"
     return s
@@ -467,7 +464,12 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 menu_element = to_div(preference+"menu",menu_element)
                 preference_menu += menu_element
             #preference_menu = self.generate_header(preference_menu_keys)
-            preference_menu += extra_fixed_menu_elements
+            toggle_images_link = generate_link("#", "Toggle images", "javascript:imtoggle()")
+            toggle_images_link = to_span("toggle_images", toggle_images_link)
+            preference_menu += toggle_images_link
+            train_link = generate_link("/Train", "Train and bring news")
+            train_link = to_span("train", train_link)
+            preference_menu += train_link
             self.wfile.write(preference_menu)
             # Generate feeds menu in the current preference menu
             current_preference = self.server.current_preference_folder
@@ -481,6 +483,8 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.wfile.write(to_header(2,feed_chosen))
             self.wfile.write(self.generate_entry_separator())
             session_dict.close()
+            if "Train" in self.path:
+                self.server.update_session()
             if self.server.feed_chosen in feeds_menu_keys:
                 dic_current_feed = dict_feeds[feed_chosen]
                 sorted_keys = self.server.rank_entries_by_preference(dic_current_feed)

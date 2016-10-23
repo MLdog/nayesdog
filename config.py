@@ -19,7 +19,6 @@ feeds_url_dict = {
     'NatureResearch': 'http://feeds.nature.com/NatureLatestResearch',
     'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
     'Science': 'http://www.sciencemag.org/rss/current.xml',
-    'IEEE': 'http://spectrum.ieee.org/rss/fulltext',
 }
 word_counts_database_file = './tables.py.gz'
 stopwords_file = './stopwords.txt'

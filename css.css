@@ -60,6 +60,7 @@ body{
     margin-top: 250px
 }
 
+
 img {
     max-width:100%;
     max-height:100%;
@@ -78,12 +79,49 @@ a{
     color: #999
 }
 
+.toggle_images {
+    color : black;
+    position: fixed;
+    margin-left: -150px;
+    margin-top: 400px
+}
+.toggle_images a{
+    /*color:gray;*/
+    color:transparent;
+    background-image:url('/icons/no_image.png');
+    padding: 25px;
+    background-repeat: no-repeat;
+    font-size: 5px;
+}
+.untoggle_images a{
+    /*color:gray;*/
+    color:transparent;
+    background-image:url('/icons/image.png');
+    padding: 25px;
+    background-repeat: no-repeat;
+    font-size: 5px;
+}
+
+.train {
+    color : black;
+    position: fixed;
+    margin-left: -150px;
+    margin-top: 330px
+}
+.train a{
+    /*color:gray;*/
+    color:transparent;
+    background-image:url('/icons/compute.png');
+    padding: 25px;
+    background-repeat: no-repeat;
+    font-size: 5px;
+}
 
 .Homemenu .unselected_link a{
     /*color:gray;*/
     color:transparent;
     background-image:url('/icons/home_hover.png');
-    padding: 30px;
+    padding: 20px;
     background-repeat: no-repeat;
     font-size: 30px;
 }
@@ -91,7 +129,7 @@ a{
     /*color:black;*/
     color:transparent;
     background-image:url('/icons/home.png');
-    padding: 30px;
+    padding: 20px;
     background-repeat: no-repeat;
     font-size: 30px;
 }
