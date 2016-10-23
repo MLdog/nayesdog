@@ -35,6 +35,6 @@ check folders:
 ## To-do
 
 * Test and spot bugs
-* Menu in facelib (javascript)
 * setup
 * replace shelves (?)
+* being able to enter feed names that contain spaces!

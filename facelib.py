@@ -1,5 +1,6 @@
 import feedparser
 import re
+import webbrowser
 #import html2text
 # entry_separation = '<hr style="height: 10px; color: #000">'
 from naylib import NaiveBayes
@@ -594,6 +595,7 @@ def run():
                             stopwords_file,
                             maximal_number_of_entries_in_memory)
     print('running server...')
+    webbrowser.open_new("http://localhost:8081/Home")
     httpd.serve_forever()
 
 if __name__ == '__main__':

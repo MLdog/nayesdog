@@ -16,7 +16,7 @@ feeds_url_dict = {
 }
 """
 feeds_url_dict = {
-    'Nature Research': 'http://feeds.nature.com/NatureLatestResearch',
+    'NatureResearch': 'http://feeds.nature.com/NatureLatestResearch',
     'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
     'Science': 'http://www.sciencemag.org/rss/current.xml',
     'IEEE': 'http://spectrum.ieee.org/rss/fulltext',
