@@ -588,7 +588,19 @@ class HTTPServerFeeds(HTTPServer):
             x = tranform_feed_entry_to_bag_of_words(entry)
             dict_entries[key]["prediction"] = self.nayesdog.predict(x)
             #print 'entry["prediction"] = {}'.format(entry["prediction"])
+
+def filter_previous_session_file_after_config_update(previous_session_file):
+    session_dict = shelve.open(previous_session_file, writeback=True)
+    for k in session_dict['preferences'].keys():
+        for kfeed in session_dict['preferences'][k].keys():
+            if kfeed not in feeds_url_dict.keys():
+                session_dict['preferences'][k].pop(kfeed)
+    session_dict.close()
+
+
 def run():
+    filter_previous_session_file_after_config_update(previous_session_database_file)
+
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
