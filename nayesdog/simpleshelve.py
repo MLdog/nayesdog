@@ -1,24 +1,17 @@
 """
-SimpleShelve
+Nayesdog: RSS reader with naive bayes powered recommendations
+Copyright (c) 2016 Ilya Prokin and Sergio Peignier
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-A hacky replacement for shelve module (uses eval function)
-supports OrderedDicts and any standard python datatype
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Copyright Ilya Prokin 2016
-
-Database is simple zip file with clean python code defining object
-
-Usage example:
-    ``` {.python}
-    s = SimpleShelve('file.py.gz')
-    s['asdasdasdasdasdas'] = 434534534
-    print(s)
-    s.close()
-    ```
-    Output:
-        {'asdasdasdasdasdas': 434534534}
-        stored in
-        file.db
+You should have received a copy of the GNU General Public Licensealong with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
