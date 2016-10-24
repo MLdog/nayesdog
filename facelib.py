@@ -69,10 +69,25 @@ page_head_tpl = """
 
 
 def generate_entry_id(id_entry):
+    """
+    Keeps only letters and number in RSS entry id
+    :param id_entry: RSS entry id
+    :type id_entry: String
+    :returns: Modified RSS entry id
+    :rtype: String
+    """
     return re.sub('[^a-zA-Z0-9]+', '', id_entry)
 
 
 def preprocess_rss_feed(url):
+    """
+    Preprocess RSS feed and only keeps the most important elements for each entry, i.e.,
+    the title, content, author, link and id
+    :param url: RSS feed url
+    :type: String
+    :returns: Dictionnary of most important entry elements
+    :rtype: Dict
+    """
     feed_parsed = feedparser.parse(url)
     entries = {}
     for entry in feed_parsed['entries']:
@@ -116,6 +131,17 @@ def generate_radio(var_name, value, txtzo):
 
 
 def generate_submit_button(var_name, value, image_path):
+    """
+    Generate HTML submit button with image
+    :param var_name: Variable name
+    :param value: Variable value
+    :param image_path: Path of image
+    :type var_name: String
+    :type value: String
+    :type image_path: String
+    :returns: HTML code associated to the generation of submit button
+    :rtype: String
+    """
     s = "<input type=\"image\" name=\""+var_name+"\" "
     s += "value=\""+value+"\" "
     s += "src=\""+image_path+"\"> \n"
@@ -123,12 +149,34 @@ def generate_submit_button(var_name, value, image_path):
 
 
 def to_form(element,action="\"\"", method="\"get\""):
+    """
+    Takes HTML piece of code and adds form context
+    :param element: HTML pice of code to be inserted in context
+    :param action: Form action
+    :param method: Method to be used for sending back the information (get, post ..)
+    :type element: String
+    :type action: String
+    :type method: String
+    :returns: HTML code with form context
+    :rtype: String 
+    """
     s = "<form action="+action+" method="+method+">\n"
     s += element
     s += "</form>\n"
     return s
 
 def to_div(div,element,id_html=None):
+    """
+    Takes HTML piece of code and adds div context
+    :param div: Div class name
+    :param element: HTML pice of code to be inserted in context
+    :param id_html: ID for HTML div
+    :type div: String
+    :type element: String
+    :type id_html: String or None
+    :returns: HTML code with div context
+    :rtype: String 
+    """
     if id_html is not None:
         s = "<div class=\""+div+"\" id=\""+id_html+"\"> \n"
     else:
@@ -138,12 +186,32 @@ def to_div(div,element,id_html=None):
     return s
 
 def to_span(span, element):
+    """
+    Takes HTML piece of code and adds span context
+    :param span: Span class name
+    :param element: HTML pice of code to be inserted in context
+    :type div: String
+    :type element: String
+    :returns: HTML code with span context
+    :rtype: String 
+    """
     s = "<span class=\""+span+"\">\n"
     s += element
     s += "</span>\n"
     return s
 
 def generate_link(href, name, function=None):
+    """
+    Generate HTML link
+    :param href: Reference 
+    :param name: Reference text
+    :param function: On click function
+    :type href: String
+    :type name: String
+    :type function: String or None 
+    :returns: HTML link code
+    :rtype: String
+    """
     s = "<a href=\""+href+"\""
     if function is not None:
         s += " onclick=\""+function+"\""    
@@ -153,39 +221,88 @@ def generate_link(href, name, function=None):
     return s
 
 def generate_html_table_column(element):
+    """
+    Generate HTML column with text send as parameter
+    :param element: HTML code to be inserted in column
+    :type element: String
+    :returns: HTML code inserted in html table column
+    :rtype: String
+    """
     s = "<th>\n"
     s += element
     s += "</th>\n"
     return s
 
 def generate_html_table_row(element):
+    """
+    Generate HTML row with text send as parameter
+    :param element: HTML code to be inserted in row
+    :type element: String
+    :returns: HTML code inserted in html table row
+    :rtype: String
+    """
     s = "<tr>\n"
     s += element
     s += "</tr>\n"
     return s
 
 def generate_html_table(element):
+    """
+    Generate HTML table with text send as parameter
+    :param element: HTML code to be inserted in table
+    :type element: String
+    :returns: HTML code inserted in html table
+    :rtype: String
+    """
     s = "<table>\n"
     s += element
     s += "</table>\n"
     return s
 
 def generate_html_header(element):
+    """
+    Generate HTML header with text send as parameter
+    :param element: HTML code to be inserted in header
+    :type element: String
+    :returns: HTML code inserted in html header
+    :rtype: String
+    """
     s = "<header>\n"
     s += element
     s += "</header>\n"
     return s
 
 def generate_horizontal_rule():
+    """
+    Generate html horizontal rule
+    """
     return "<hr>\n"
 
 def to_body(element):
+    """
+    Generate HTML body with text send as parameter
+    :param element: HTML code to be inserted in body
+    :type element: String
+    :returns: HTML code inserted in html body
+    :rtype: String
+    """
     s = '<body>\n'
     s += element
     s += '</body>\n'
     return s
 
 def generate_html_button(function,button_class,text):
+    """
+    Generate HTML button
+    :param function: On click function
+    :param button_class: Button class
+    :param text: Button text
+    :type function: String 
+    :type button_class: String
+    :type text: String
+    :returns: HTML button code
+    :rtype: String
+    """
     s = "<button " 
     s += "onclick=\""+function+"\" "
     s += "class=\""+button_class+"\"> "
@@ -194,6 +311,19 @@ def generate_html_button(function,button_class,text):
     return s
 
 def generate_input_text(input_type,placeholder,input_id,function):
+    """
+    Generate HTML input text
+    :param input_type: Input type
+    :param placeholder: Input text placeholder 
+    :param input_id: Input text id
+    :param function: On keyup function
+    :type input_type: String
+    :type placeholder: String
+    :type input_id: String
+    :type function: String
+    :returns: HTML input text code
+    :rtype: String
+    """
     s = "<input "
     s += "type=\""+input_type+"\" "
     s += "placeholder=\""+placeholder+"\" "
@@ -202,6 +332,15 @@ def generate_input_text(input_type,placeholder,input_id,function):
     return s
 
 def represent_rss_entry(entry, key_entry):
+    """
+    Generate HTML code for representing RSS entry
+    :param entry: Entry Dictionnary with title, link, authors, content, prediction as keys
+    :param key_entry: Key used as identifier for entry
+    :type entry: Dict
+    :type key_entry: String
+    :returns: HTML entry representation
+    :rtype: String
+    """
     s = ""
     if "title" in entry:
         if "link" in entry:
@@ -220,12 +359,33 @@ def represent_rss_entry(entry, key_entry):
     return s
 
 def to_anchor(element):
+    """
+    Add html anchor tag to element
+    :param element: String be tagged
+    :type element: String
+    :returns: Tagged element
+    :rtype: String
+    """
     return "\"#"+element+"\""
 
 def generate_html_break_line():
+    """
+    Generate HTML code for break line
+    :returns: HTML code for beack line
+    :rtype: String
+    """
     return "<br>"
 
 def to_header(header_level,element):
+    """
+    Generate HTML title header with text send as parameter
+    :param header_level: Header level
+    :param element: HTML code to be inserted in title header
+    :type header_level: Int 
+    :type element: String
+    :returns: HTML code inserted in html title header
+    :rtype: String
+    """
     s = "<h"+str(header_level)+">" 
     s += element
     s += "</h"+str(header_level)+">" 
@@ -264,6 +424,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         return menu
 
     def generate_feeds_menu(self, list_rss_feeds):
+        """
+        Generate Feeds side menu
+        :param list_rss_feeds: List of RSS feeds titles
+        :type list_rss_feeds: List
+        :returns: HTML code for feeds menu
+        :rtype: String
+        """
         dropdown = generate_input_text("text","Search..","myInput","filterFunction()")
         for feed in list_rss_feeds:
             menu_element = generate_link(feed, feed)
@@ -278,6 +445,17 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                                     var_name,
                                     anchor_to_closest_element,
                                     method):
+        """
+        Generate Save and delete bar option
+        :param var_name: Submit button variable name
+        :param anchor_to_closest_element: Anchor to the closest entry
+        :param method: Method to send information (get, post ..)
+        :type var_name: String
+        :type anchor_to_closest_element: String
+        :type method: String
+        :returns: HTML code for save and delete bar 
+        :rtype: String
+        """
         s = generate_submit_button(var_name,
                                     "Save",
                                     "/icons/save.png")
@@ -393,9 +571,18 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         return {"feed": entry_split[0], "index": entry_split[1]}
 
     def generate_entry_separator(self):
+        """
+        Generates HTML separator between entries
+        :returns: Separator between entries HTML code
+        :rtype: String
+        """
         return to_span("entries_separator", "<br>\n<hr>\n")
 
     def update_feed_or_preference_folder(self):
+        """
+        Updates the values for server.feed_chosen or server.current_preference_folder
+        according to the values of the path
+        """
         folder = self.extract_chosen_feed_from_path()
         session_dict = shelve.open(self.server.previous_session)
         if folder in session_dict["preferences"].keys():
@@ -406,11 +593,27 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         session_dict.close()
 
     def get_closest_element_anchor(self, keys, key_id, feed_chosen):
+        """
+        Retieve a HTML anchor to the closest entry 
+        :param keys: List of entries identifiers
+        :param key_id: Current entry identifier
+        :param feed_chosen: Current chosen feed
+        :type keys: List
+        :type key_id: String
+        :type feed_chosen: String
+        :returns: HTML anchor to the closest entry
+        :rtype: String
+        """
         if key_id == len(keys) - 1:
             return to_anchor(feed_chosen+"_"+keys[key_id - 1])
         return to_anchor(feed_chosen+"_"+keys[key_id + 1])
 
     def do_GET(self):
+        """
+        Reaction to get method. If the requested element is the style, sends the css style.
+        If it is an image sends the image. Otherwise, it reconstructs the webpage according
+        to the changes and sent it to the client. 
+        """
         self.send_response(200)
         mimetype, _ = mimetypes.guess_type(self.path)
         if self.path == '/'+self.server.cssfile:
@@ -523,6 +726,9 @@ class HTTPServerFeeds(HTTPServer):
         self.update_session()
 
     def update_session(self):
+        """
+        Update session feeds, entries and entries scores
+        """
         session_dict = shelve.open(self.previous_session, writeback=True)
         if "preferences" not in session_dict:
             session_dict["preferences"] = {}
@@ -532,6 +738,7 @@ class HTTPServerFeeds(HTTPServer):
             session_dict["preferences"]["Like"] = {}
         if "Home" not in session_dict["preferences"]:
             session_dict["preferences"]["Home"] = {}
+        self.filter_previous_session_file_after_config_update(session_dict)
         self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
         for feed in self.feeds_url_dict:
             received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
@@ -547,35 +754,59 @@ class HTTPServerFeeds(HTTPServer):
         session_dict.close()
 
     def initialize_each_seen_entry_as_useless(self, seen_entries_keys):
+        """
+        Initialize each entry in list as useless
+        :param seen_entries_keys: List of entries that are in memory
+        :type seen_entries_keys: list
+        """
         for key in seen_entries_keys:
             seen_entries_keys[key] = 0
 
     def prune_useless_stored_entries_keys(self,seen_entries_keys):
+        """
+        Prune old erased entries from list of entries
+        :param seen_entries_keys: List of entries that are in memory
+        :type seen_entries_keys: list        
+        """
         for key in seen_entries_keys.keys():
             if not seen_entries_keys[key]:
                 seen_entries_keys.pop(key)
 
     def rank_entries_by_preference(self,dict_entries):
+        """
+        Get entries id ranked by preference.
+        :param dict_entries: Dict of entries
+        :type dict_entries: Dict
+        :returns: List of entries ids ranked by preference
+        :rtype: List
+        """
         get_prediction_from_entry = lambda k: dict_entries[k]["prediction"]
         ranks = sorted(dict_entries, key=get_prediction_from_entry, reverse=True)
         return ranks
 
     def predict_entries_in_dict(self,dict_entries):
+        """
+        Predicts entries preference with Naive Bayesian algorithm
+        :param dict_entries: Dict of entries
+        :type dict_entries: Dict
+        """
         for key,entry in dict_entries.iteritems():
             x = tranform_feed_entry_to_bag_of_words(entry)
             dict_entries[key]["prediction"] = self.nayesdog.predict(x)
 
-def filter_previous_session_file_after_config_update(previous_session_file):
-    session_dict = shelve.open(previous_session_file, writeback=True)
-    for k in session_dict['preferences'].keys():
-        for kfeed in session_dict['preferences'][k].keys():
-            if kfeed not in feeds_url_dict.keys():
-                session_dict['preferences'][k].pop(kfeed)
-    session_dict.close()
+    def filter_previous_session_file_after_config_update(self,session_dict):
+        """
+        Update session Dictionnary to take into account modifications in config file
+        :param session_dict: Dict of session
+        :type session_dict: Dict
+        """
+        for k in session_dict['preferences'].keys():
+            for kfeed in session_dict['preferences'][k].keys():
+                if kfeed not in feeds_url_dict.keys():
+                    session_dict['preferences'][k].pop(kfeed)
 
 
 def run():
-    filter_previous_session_file_after_config_update(previous_session_database_file)
 
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,

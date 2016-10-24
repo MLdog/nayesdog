@@ -41,3 +41,4 @@ check folders:
 * being able to enter feed names that contain spaces!
 * Do pypi package: http://peterdowns.com/posts/first-time-with-pypi.html
 * License http://www.gnu.org/licenses/gpl.html
+* summarization: https://github.com/neopunisher/Open-Text-Summarizer

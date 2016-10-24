@@ -2,7 +2,7 @@ import re
 import time
 import os
 
-
+#remove this function
 def dargmax(d, vmax0=-1):
     vmax = vmax0
     kmax = 0
@@ -12,10 +12,11 @@ def dargmax(d, vmax0=-1):
             kmax = k
     return kmax
 
+#remove this function
 def classnamer(k):
     return {0:"dislike", 1:"like"}.get(k, "dont know if you like")
 
-
+#remove this funciton
 def print_sorted(d, indent=0, s="  "):
     for k in sorted(d.keys()):
         print("{}{}".format(s*indent, k))
@@ -24,7 +25,7 @@ def print_sorted(d, indent=0, s="  "):
         else:
             print("{}{}".format(s*(indent+1), d[k]))
 
-
+#remove this function
 def file_to_str(filepath):
     with open(filepath, 'r') as f:
         s = f.read()
@@ -32,6 +33,13 @@ def file_to_str(filepath):
 
 
 def simplify_html(s):
+    """
+    Simplify HTML code
+    :param s: Piece of HTML code 
+    :type s: String
+    :returns: Piece of HTML code simplified
+    :stype: String
+    """
     s = re.sub('style="[^"]+"', '', s)
     s = re.sub('height="[^"]+"', '', s)
     s = re.sub('width="[^"]+"', '', s)
@@ -187,7 +195,7 @@ def process_an_entry(e):
         l['authors'] = list(map(lambda x: x['name'], e['authors']))
     return l
 
-
+#should remove this function
 def process_sergios_entry(e, index):
     """
     Process an RSS entry and list of words for training
@@ -212,7 +220,7 @@ def process_sergios_entry(e, index):
         l += e['authors']
     return {index:l}
 
-
+#should remove this function
 def transform_feed_dict(d):
     # load simplified entries
     entries = list(map(process_an_entry, d['entries']))
