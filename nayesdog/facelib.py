@@ -35,7 +35,8 @@ from config import (
         previous_session_database_file,
         word_counts_database_file,
         maximal_number_of_entries_in_memory,
-        stopwords_file
+        stopwords_file,
+        icons_folder
         )
 page_head_tpl = """
 <!DOCTYPE html><html><head>
@@ -473,10 +474,10 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         s = generate_submit_button(var_name,
                                     "Save",
-                                    "/icons/save.png")
+                                    self.server.icons_folder+"/save.png")
         s += generate_submit_button(var_name,
                                      "Delete",
-                                     "/icons/delete.png")
+                                     self.server.icons_folder+"/delete.png")
         s = to_form(s,action=anchor_to_closest_element,method=method)
         s = to_div("submit_bar",s)
         return s
@@ -497,11 +498,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         s = to_span("submit_button",
                     generate_submit_button(var_name,
                                             "Like",
-                                            "/icons/like.png"))
+                                            self.server.icons_folder+"/like.png"))
         s += to_span("submit_button",
                      generate_submit_button(var_name,
                                              "Dislike",
-                                             "/icons/dislike.png"))
+                                             self.server.icons_folder+"/dislike.png"))
 
         s = to_form(s, action=anchor_to_closest_element, method=method)
         s = to_div("submit_bar", s)
@@ -631,13 +632,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         self.send_response(200)
         mimetype, _ = mimetypes.guess_type(self.path)
-        if self.path == '/'+self.server.cssfile:
+        if ".css" in self.path:#== '/'+self.server.cssfile
             self.send_header('Content-type', mimetype)
             self.end_headers()
             self.wfile.write(file_to_str(self.server.cssfile))
         elif mimetype is not None and "image" in mimetype:
-            imfile = self.path[1:] if self.path[0] == "/" else self.path
-            imfile = os.path.join(os.getcwd(), imfile)
+            imfile = self.path.split("/")[-1]
+            imfile = os.path.join(self.server.icons_folder, imfile)
             if os.path.isfile(imfile):
                 self.send_header('Content-type', mimetype)
                 self.end_headers()
@@ -693,7 +694,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     id_entry = self.generate_id_entry(feed_chosen, key)
                     rss_entry = represent_rss_entry(entry, id_entry)
                     self.wfile.write(rss_entry)
-                    if self.server.current_preference_folder == "Home":
+                    if self.server.current_preference_folder == self.server.home:
                         self.wfile.write(self.generate_like_options(id_entry,
                                                                     anchor,
                                                                     "get"))
@@ -716,7 +717,8 @@ class HTTPServerFeeds(HTTPServer):
                  previous_session,
                  word_counts_database_file,
                  stopwords_file,
-                 maximal_number_of_entries):
+                 maximal_number_of_entries,
+                 icons_folder):
         """
         Generates an instance for HTTPServerFeeds that inheritates from
         HTTPServer class.
@@ -725,16 +727,30 @@ class HTTPServerFeeds(HTTPServer):
         HTTPServer.
         :param cssfile: CSS file.
         :param feeds_url_dict: Dictionnary with feed urls and names.
+        :param previous_session: File name for shelve object that stores the session
+        :param word_counts_database_file: File name for object storing the word counts
+        :param stopwords_file: File name for list of stopwords
+        :param maximal_number_of_entries: Maximal number of entries allowed
+        :param icons_folder: Icons folder
         :type server_address: Tuple.
         :type HTTPServer_RequestHandler: HTTPServer_RequestHandler class.
         :type cssfile: String.
-        :type feeds_url_dict: Dict."""
+        :type feeds_url_dict: Dict.
+        :type previous_session: String
+        :type word_counts_database_file: String
+        :type stopwords_file: String 
+        :type maximal_number_of_entries: Int
+        :type icons_folder: String
+        """
         HTTPServer.__init__(self, server_address, HTTPServer_RequestHandler)
+        self.home = "Home"
+        self.like = "Like"
         self.cssfile = cssfile
         self.feeds_url_dict = feeds_url_dict
         self.previous_session = previous_session
-        self.current_preference_folder = "Home"
+        self.current_preference_folder = self.home
         self.feed_chosen = ""
+        self.icons_folder = icons_folder
         self.nayesdog = naylib.NaiveBayes(word_counts_database_file,
                                           stopwords_file,
                                           maximal_number_of_entries)
@@ -749,22 +765,22 @@ class HTTPServerFeeds(HTTPServer):
             session_dict["preferences"] = {}
         if "seen_entries_keys" not in session_dict:
             session_dict["seen_entries_keys"] = {}
-        if "Like" not in session_dict["preferences"]:
-            session_dict["preferences"]["Like"] = {}
-        if "Home" not in session_dict["preferences"]:
-            session_dict["preferences"]["Home"] = {}
+        if self.like not in session_dict["preferences"]:
+            session_dict["preferences"][self.like] = {}
+        if self.home not in session_dict["preferences"]:
+            session_dict["preferences"][self.home] = {}
         self.filter_previous_session_file_after_config_update(session_dict)
         self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
         for feed in self.feeds_url_dict:
             received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
             for key, entry in received_entries.iteritems():
                 if key not in session_dict["seen_entries_keys"]:
-                    if feed not in session_dict["preferences"]["Home"]:
-                        session_dict["preferences"]["Home"][feed] = {}
-                    session_dict["preferences"]["Home"][feed][key] = entry
+                    if feed not in session_dict["preferences"][self.home]:
+                        session_dict["preferences"][self.home][feed] = {}
+                    session_dict["preferences"][self.home][feed][key] = entry
                 session_dict["seen_entries_keys"][key] = 1
-        for feed in session_dict["preferences"]["Home"]:
-            self.predict_entries_in_dict(session_dict["preferences"]["Home"][feed])
+        for feed in session_dict["preferences"][self.home]:
+            self.predict_entries_in_dict(session_dict["preferences"][self.home][feed])
         self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
         session_dict.close()
 
@@ -821,8 +837,15 @@ class HTTPServerFeeds(HTTPServer):
                     session_dict['preferences'][k].pop(kfeed)
 
 
-def run():
-
+def run(server_address = server_address,
+        HTTPServer_RequestHandler_feeds = HTTPServer_RequestHandler_feeds,
+        cssfile = cssfile,
+        feeds_url_dict = feeds_url_dict,
+        previous_session_database_file = previous_session_database_file,
+        word_counts_database_file = word_counts_database_file,
+        stopwords_file = stopwords_file,
+        maximal_number_of_entries_in_memory = maximal_number_of_entries_in_memory,
+        icons_folder = icons_folder):
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
@@ -830,7 +853,8 @@ def run():
                             previous_session_database_file,
                             word_counts_database_file,
                             stopwords_file,
-                            maximal_number_of_entries_in_memory)
+                            maximal_number_of_entries_in_memory,
+                            icons_folder)
     print('running server...')
     httpd.serve_forever()
 

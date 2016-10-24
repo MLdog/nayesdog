@@ -3,12 +3,23 @@
 # Commandline tool
 
 if __name__ == '__main__':
-
+    import os
     import sys
+    import importlib
     import webbrowser
-    from facelib import run
-    from config import server_address
-
+    from nayesdog.facelib import run
+    from nayesdog.config import server_address, user_config_file, list_of_user_parameters, write_simple_config
+    if user_config_file not in os.listdir("."):
+        write_simple_config()
+    parameters = {}
+    print os.listdir(".")
+    print os.getcwd()
+    sys.path.append(".")
+    import user_config
+    #user_config = importlib.import_module(user_config_file.split(".")[0])
+    for name in dir(user_config):
+        if name in list_of_user_parameters:
+            parameters[name] = getattr(user_config,name)
     if '--help' in sys.argv or '-h' in sys.argv:
         print('''
     --help or =h to print this help
@@ -17,5 +28,4 @@ if __name__ == '__main__':
         sys.exit()
     if '--no-browser' not in sys.argv:
         webbrowser.open('{}:{}'.format(*server_address))
-
-    run()
+    run(**parameters)

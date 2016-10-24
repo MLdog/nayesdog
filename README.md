@@ -11,26 +11,11 @@ RSS reader with naive bayes powered recommendations
 - urls is file with URLs of feeds.
 - wgetsitedownloader.sh is a scrpt to download webisite recursively with wget. To make offline version of html feeds:
 
-    ``` {.bash}
-    cd OUTPUTFOLDER; bash wgetsitedownloader.sh http://localhost:8081
-    ```
-
 ---
-
-To have local files with feeds:
-
-edit prep_feeds.sh:
-
-``` {.bash}
-feeddest=~/feeds
-mddest="$feeddest/md"
-```
-
-run:
-bash prep_feeds.sh
-
-check folders:
-~/feeds/ and ~/feeds/md/
++ create a directory from which you want to run NayesDog
++ Run NayesDog from this directory
++ Modify the user_config.py file to include new RSS feeds or remove the existing ones
++ The file tables.py.gz contains your trained model
 
 
 ## To-do
@@ -39,6 +24,4 @@ check folders:
 * setup
 * replace shelves (?)
 * being able to enter feed names that contain spaces!
-* Do pypi package: http://peterdowns.com/posts/first-time-with-pypi.html
-* License http://www.gnu.org/licenses/gpl.html
 * summarization: https://github.com/neopunisher/Open-Text-Summarizer
