@@ -94,6 +94,50 @@ a{
     color: #999
 }
 
+.save_option{
+    color : black;
+}
+.save_option a{
+    color:transparent;
+    background-image:url('/icons/save.png');
+    background-repeat: no-repeat;
+    font-size: 2px;
+    padding: 15px;
+}
+
+.delete_option{
+    color : black;
+}
+.delete_option a{
+    color:transparent;
+    background-image:url('/icons/delete.png');
+    background-repeat: no-repeat;
+    font-size: 2px;
+    padding: 15px;
+}
+
+.like_option{
+    color : black;
+}
+.like_option a{
+    color:transparent;
+    background-image:url('/icons/like.png');
+    background-repeat: no-repeat;
+    font-size: 2px;
+    padding: 15px;
+}
+
+.dislike_option{
+    color : black;
+}
+.dislike_option a{
+    color:transparent;
+    background-image:url('/icons/dislike.png');
+    background-repeat: no-repeat;
+    font-size: 2px;
+    padding: 15px;
+}
+
 .toggle_images {
     color : black;
     position: fixed;

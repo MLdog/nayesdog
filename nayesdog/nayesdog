@@ -27,5 +27,5 @@ if __name__ == '__main__':
     '''.format(*server_address))
         sys.exit()
     if '--no-browser' not in sys.argv:
-        webbrowser.open('{}:{}'.format(*server_address))
+        webbrowser.open('http://{}:{}'.format(*server_address))
     run(**parameters)

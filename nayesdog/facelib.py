@@ -145,7 +145,6 @@ def generate_radio(var_name, value, txtzo):
     s += "\" value=\""+value+"\">"+txt+"\n"
     return s
 
-
 def generate_submit_button(var_name, value, image_path):
     """
     Generate HTML submit button with image
@@ -162,7 +161,6 @@ def generate_submit_button(var_name, value, image_path):
     s += "value=\""+value+"\" "
     s += "src=\""+image_path+"\"> \n"
     return s
-
 
 def to_form(element,action="\"\"", method="\"get\""):
     """
@@ -382,7 +380,7 @@ def to_anchor(element):
     :returns: Tagged element
     :rtype: String
     """
-    return "\"#"+element+"\""
+    return "#"+element
 
 def generate_html_break_line():
     """
@@ -472,14 +470,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code for save and delete bar 
         :rtype: String
         """
-        s = generate_submit_button(var_name,
-                                    "Save",
-                                    self.server.icons_folder+"/save.png")
-        s += generate_submit_button(var_name,
-                                     "Delete",
-                                     self.server.icons_folder+"/delete.png")
-        s = to_form(s,action=anchor_to_closest_element,method=method)
-        s = to_div("submit_bar",s)
+        save_link_text = "/?"+var_name+"=Save"+anchor_to_closest_element
+        save_link = generate_link(save_link_text, "Save")
+        save_link = to_span("save_option", save_link)
+        delete_link_text = "/?"+var_name+"=Delete"+anchor_to_closest_element
+        delete_link = generate_link(delete_link_text, "Delete")
+        delete_link = to_span("delete_option", delete_link)
+        s = save_link + delete_link
         return s
 
     def generate_like_options(self, 
@@ -495,17 +492,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code to generate radio and submit button
         :rtype: String.
         """
-        s = to_span("submit_button",
-                    generate_submit_button(var_name,
-                                            "Like",
-                                            self.server.icons_folder+"/like.png"))
-        s += to_span("submit_button",
-                     generate_submit_button(var_name,
-                                             "Dislike",
-                                             self.server.icons_folder+"/dislike.png"))
-
-        s = to_form(s, action=anchor_to_closest_element, method=method)
-        s = to_div("submit_bar", s)
+        like_link_text = "/?"+var_name+"=Like"+anchor_to_closest_element
+        like_link = generate_link(like_link_text, "Like")
+        like_link = to_span("like_option", like_link)
+        dislike_link_text = "/?"+var_name+"=Dislike"+anchor_to_closest_element
+        dislike_link = generate_link(dislike_link_text, "Dislike")
+        dislike_link = to_span("dislike_option", dislike_link)
+        s = like_link + dislike_link
         return s
 
     def extract_chosen_feed_from_path(self):
@@ -561,7 +554,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                 if preference == "Save":
                     entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
                     file_save = open(feed_name+"_saved_entries.html", "a")
-                    file_save.write(represent_rss_entry(entry))
+                    file_save.write(represent_rss_entry(entry,component))
                     file_save.write(self.generate_entry_separator())
                     file_save.close()
             else:
@@ -707,7 +700,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.wfile.write('</body>\n</html>')
         return
 
-
 class HTTPServerFeeds(HTTPServer):
     def __init__(self,
                  server_address,
@@ -835,7 +827,6 @@ class HTTPServerFeeds(HTTPServer):
             for kfeed in session_dict['preferences'][k].keys():
                 if kfeed not in feeds_url_dict.keys():
                     session_dict['preferences'][k].pop(kfeed)
-
 
 def run(server_address = server_address,
         HTTPServer_RequestHandler_feeds = HTTPServer_RequestHandler_feeds,

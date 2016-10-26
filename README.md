@@ -9,29 +9,27 @@ RSS reader with naive bayes powered recommendations
 - feeds2mds.py is script that converts local rss files to markdown documents.
 - prep_feeds.sh is script that downloads RSS from *urls* file and renames them with their readable title, and then converts all feeds to markdown.
 - urls is file with URLs of feeds.
-- wgetsitedownloader.sh is a scrpt to download webisite recursively with wget. To make offline version of html feeds:
-
 ---
-## Installation:
 
+## Dependencies:
+[feedparser](https://pypi.python.org/pypi/feedparser)
+
+## Installation:
 pip install nayesdog
 
 ## Execution:
++ To run `nayesdog` you only need to run `NayesDog` in a terminal
++ `NayesDog` will create three files in the current directory:
+	+  `user_config.py`: configuration file.  Modify this file to include new RSS feeds or remove the existing ones.
+	+ `tables.py.gz`: The trained model, containing the word counts that are used by the Naive Bayes Classifier. You can copy your model, use it somewhere else and share it.
+	+ `.previous_session`: A hidden shelve file that stores the state of your session. If you have problems, try to erase this file.
++ By running `NayesDog` from different folder you can have different nayesdogs trained for different purposes and different RSS feeds.
 
-+ Create a directory from which you want to run NayesDog  (e.g., `mkdir News` and `cd News`)
-+ Run NayesDog from this directory typing `NayesDog`
-+ Modify the user_config.py file to include new RSS feeds or remove the existing ones. The feed names should only contain letters and numbers
-+ The file tables.py.gz contains your trained model
-
-## Browsers:
- 
-+ Works well with Google chrome and safari
-+ [Problems with Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=583211) (It will work soon ;))
+## Python library:
+You can import the `nayesdog` library into python projects with `import nayesdog`
 
 ## To-do
-
 * Test and spot bugs
-* compatibility with firefox
-* replace shelves (?)
+* replace shelves for cross-compatibility (?)
 * being able to enter feed names that contain spaces!
 * summarization: https://github.com/neopunisher/Open-Text-Summarizer
