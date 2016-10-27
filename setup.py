@@ -11,6 +11,7 @@ setup(
     keywords = ['RSS reader', 'Naive Bayes', 'recommendations'],
     classifiers = [],
     package_data = {'nayesdog':['icons/*','css.css','stopwords.txt']},
+    install_requires=['feedparser'],
     scripts=['nayesdog/NayesDog'],
 )
 #    entry_points={
