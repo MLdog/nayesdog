@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 setup(
     name = 'nayesdog',
     packages = ['nayesdog'],
@@ -12,7 +12,7 @@ setup(
     classifiers = [],
     package_data = {'nayesdog':['icons/*','css.css','stopwords.txt']},
     install_requires=['feedparser'],
-    scripts=['nayesdog/NayesDog'],
+    scripts=['nayesdog/nayesdog'],
 )
 #    entry_points={
 #        'console_scripts':[

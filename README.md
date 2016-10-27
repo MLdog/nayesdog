@@ -17,7 +17,7 @@ RSS reader with naive bayes powered recommendations
 ## Installation:
 pip install nayesdog
 
-## Execution:
+## Usage:
 + To run `nayesdog` you only need to run `NayesDog` in a terminal
 + `NayesDog` will create three files in the current directory:
 	+  `user_config.py`: configuration file.  Modify this file to include new RSS feeds or remove the existing ones.
