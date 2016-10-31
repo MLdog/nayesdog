@@ -28,16 +28,18 @@ import naylib
 import time
 import shelve
 import os
-from config import (
-        server_address,
-        cssfile,
-        feeds_url_dict,
-        previous_session_database_file,
-        word_counts_database_file,
-        maximal_number_of_entries_in_memory,
-        stopwords_file,
-        icons_folder
-        )
+from config import make_me_config
+exec(make_me_config())
+#from config import (
+#        server_address,
+#        cssfile,
+#        feeds_url_dict,
+#        previous_session_database_file,
+#        word_counts_database_file,
+#        maximal_number_of_entries_in_memory,
+#        stopwords_file,
+#        icons_folder
+#        )
 page_head_tpl = """
 <!DOCTYPE html><html><head>
   <meta charset="utf-8">

@@ -1,0 +1,3 @@
+include nayesdog/icons/*
+include nayesdog/stopwords.txt
+include nayesdog/css.css

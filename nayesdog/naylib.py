@@ -19,7 +19,9 @@ from math import log, exp as mexp
 from simpleshelve import save_object_simple, load_object_simple
 from doglib import file_to_str, transform_feed_dict
 
-from config import word_counts_database_file, stopwords_file
+from config import make_me_config
+exec(make_me_config())
+#from config import word_counts_database_file, stopwords_file
 
 
 EPS = 1e-12
