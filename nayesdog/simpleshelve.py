@@ -13,26 +13,44 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public Licensealong with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+"""
+SimpleShelve is a module included with NayesDog
+
+A replacement for shelve module (uses pickle+gzip)
+supports any standard python datatype
+
+Database is simple zip file with clean python code defining object
+
+Usage example:
+    ``` {.python}
+    s = SimpleShelve('file.py.gz')
+    s['asdasdasdasdasdas'] = 434534534
+    print(s)
+    s.close()
+    ```
+    Output:
+        {'asdasdasdasdasdas': 434534534}
+        stored in
+        file.db
+"""
 
 import os
+import pickle
 import gzip
-from collections import OrderedDict # has to be here even that it is not used in code
 
 
-# two dumb simple save/load in transparent format
 def save_object_simple(outfilename, obj):
     s = repr(obj)
     #with open(outfilename, 'w') as f:
     with gzip.open(outfilename, 'wb') as f:
-        f.write(s.encode())
+        pickle.dump(obj, f)
 
 
-# OrderedDict has to be defined, otherwise EVAL won't load it from file
 def load_object_simple(filename):
     #with open(filename, 'r') as f:
     with gzip.open(filename, 'rb') as f:
-        s = f.read()
-    return eval(s)
+        obj = pickle.load(f)
+    return obj
 
 
 class SimpleShelve:
@@ -49,7 +67,7 @@ class SimpleShelve:
         save_object_simple(self.filepath, self.data)
 
     def close(self, sync=True):
-        if self.dict is None:
+        if self.data is None:
             return
         try:
             if sync:
@@ -64,6 +82,9 @@ class SimpleShelve:
 
     def __del__(self):
         self.close(sync=self.write_on_destroy)
+
+    def __contains__(self, key):
+        return key in self.data
 
     def __getitem__(self, key):
         try:
