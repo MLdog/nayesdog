@@ -28,8 +28,8 @@ import naylib
 import time
 from simpleshelve import SimpleShelve as shelve
 import os
-from config import make_me_config
-exec(make_me_config())
+#from config import make_me_config
+#exec(make_me_config())
 #from config import (
 #        server_address,
 #        cssfile,
@@ -832,18 +832,18 @@ class HTTPServerFeeds(HTTPServer):
         """
         for k in session_dict['preferences'].keys():
             for kfeed in session_dict['preferences'][k].keys():
-                if kfeed not in feeds_url_dict.keys():
+                if kfeed not in self.feeds_url_dict.keys():
                     session_dict['preferences'][k].pop(kfeed)
 
-def run(server_address = server_address,
-        HTTPServer_RequestHandler_feeds = HTTPServer_RequestHandler_feeds,
-        cssfile = cssfile,
-        feeds_url_dict = feeds_url_dict,
-        previous_session_database_file = previous_session_database_file,
-        word_counts_database_file = word_counts_database_file,
-        stopwords_file = stopwords_file,
-        maximal_number_of_entries_in_memory = maximal_number_of_entries_in_memory,
-        icons_folder = icons_folder):
+def run(server_address=None,
+        cssfile=None,
+        feeds_url_dict=None,
+        previous_session_database_file=None,
+        word_counts_database_file=None,
+        stopwords_file=None,
+        maximal_number_of_entries_in_memory=None,
+        icons_folder=None,
+        HTTPServer_RequestHandler_feeds=HTTPServer_RequestHandler_feeds):
     httpd = HTTPServerFeeds(server_address,
                             HTTPServer_RequestHandler_feeds,
                             cssfile,
@@ -856,5 +856,5 @@ def run(server_address = server_address,
     print('running server...')
     httpd.serve_forever()
 
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()

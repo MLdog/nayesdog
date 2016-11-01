@@ -12,10 +12,10 @@ setup(
     classifiers = [],
     package_data = {'nayesdog':['icons/*','css.css','stopwords.txt']},
     include_package_data=True,
-    #entry_points = """
-    #  [console_scripts]
-    #  nayesdog = command_line:main
-    #""",
+    entry_points = """
+      [console_scripts]
+      nayesdog = nayesdog.command_line:main
+    """,
     install_requires=['feedparser'],
-    scripts=['bin/nayesdog'],
+    #scripts=['bin/nayesdog'],
 )

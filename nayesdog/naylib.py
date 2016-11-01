@@ -19,14 +19,13 @@ from math import log, exp as mexp
 from simpleshelve import save_object_simple, load_object_simple
 from doglib import file_to_str, transform_feed_dict
 
-from config import make_me_config
-exec(make_me_config())
+#from config import make_me_config
+#exec(make_me_config())
 #from config import word_counts_database_file, stopwords_file
 
 
 EPS = 1e-12
 constPx = 1e-3 # prob to have a word in an item
-MAXNBENTRIES = 300
 NUMCLASSES = 2
 
 def exp(x):
@@ -36,16 +35,16 @@ def exp(x):
 class NaiveBayes:
 
     def __init__(self,
-                 db_file=word_counts_database_file,
-                 stopwordsfile=stopwords_file,
-                 maximal_number_of_entries=MAXNBENTRIES,
+                 word_counts_database_file,
+                 stopwords_file,
+                 maximal_number_of_entries,
                  num_classes=NUMCLASSES):
-        self.stopwords = set(file_to_str(stopwordsfile).split('\n'))
+        self.stopwords = set(file_to_str(stopwords_file).split('\n'))
         self.maximal_number_of_entries = maximal_number_of_entries
         self.num_classes = num_classes
-        self.db_file = db_file
-        if os.path.isfile(self.db_file):
-            self.table = load_object_simple(self.db_file)
+        self.word_counts_database_file = word_counts_database_file
+        if os.path.isfile(self.word_counts_database_file):
+            self.table = load_object_simple(self.word_counts_database_file)
         else:
             self.table = self.create_empty_tables()
 
@@ -57,7 +56,7 @@ class NaiveBayes:
         return tables
     
     def save_tables(self):
-        save_object_simple(self.db_file, self.table)
+        save_object_simple(self.word_counts_database_file, self.table)
 
     def sort_word_tables(self):
         # sort word_counts table based on log(P(y|x)-log(P(y))
