@@ -17,7 +17,7 @@ import os
 from collections import OrderedDict
 from math import log, exp as mexp
 from simpleshelve import save_object_simple, load_object_simple
-from doglib import file_to_str, transform_feed_dict
+from doglib import file_to_str
 
 #from config import make_me_config
 #exec(make_me_config())
@@ -110,7 +110,7 @@ class NaiveBayes:
         self.sort_word_tables()
         self.save_tables()
 
-    def predict(self, X, Y=None):
+    def predict(self, X):
     
         if isinstance(X[0],list):
             Y_predicted = []

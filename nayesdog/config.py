@@ -1,6 +1,5 @@
 import os
 import imp
-import sys
 
 HOME = os.path.expanduser("~")
 DEFAULTCONFIGPATH = os.path.join(HOME, '.nayesdog')

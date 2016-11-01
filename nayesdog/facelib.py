@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public Licensealong with this
 """
 import feedparser
 import re
-from naylib import NaiveBayes
 from urlparse import urlparse
 import mimetypes
 from doglib import (
@@ -131,7 +130,7 @@ def preprocess_rss_feed(url):
     return entries
 
 # old version of like-dislike
-def generate_radio(var_name, value, txtzo):
+def generate_radio(var_name, value):
     """
     Generate HTML code to create a radio
     :param var_name: Variable name.
@@ -364,7 +363,7 @@ def represent_rss_entry(entry, key_entry):
         else:
             s += to_span("title",entry["title"])
     if "authors" in entry:
-        authors = ", ".join(entry["authors"])
+        #authors = ", ".join(entry["authors"])
         s += to_span("authors",", ".join(entry["authors"]))
     if "content" in entry:
         s += to_span("content",entry["content"])
@@ -458,8 +457,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def generate_save_delete_option(self,
                                     var_name,
-                                    anchor_to_closest_element,
-                                    method):
+                                    anchor_to_closest_element):
         """
         Generate Save and delete bar option
         :param var_name: Submit button variable name
@@ -482,8 +480,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def generate_like_options(self, 
                               var_name, 
-                              anchor_to_closest_element, 
-                              method):
+                              anchor_to_closest_element):
         """
         Generate HTML code to create  radio and submit button for 
         Like/Dislike/Ignore options.
@@ -778,7 +775,7 @@ class HTTPServerFeeds(HTTPServer):
         session_dict.close()
 
     def filter_url_feeds(self, session_dict):
-        feeds_url_config = [url for key,url in self.feeds_url_dict.iteritems()]
+        feeds_url_config = [url for url in self.feeds_url_dict.values()]
         for url in session_dict["feed_url_names"].keys():
             if url not in feeds_url_config:
                 session_dict["feed_url_names"].pop(url)
