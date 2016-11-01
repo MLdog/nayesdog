@@ -754,33 +754,51 @@ class HTTPServerFeeds(HTTPServer):
         Update session feeds, entries and entries scores
         """
         session_dict = shelve(self.previous_session)
+        self.initialize_shelve_structure(session_dict)
+        self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
+        for feed in self.feeds_url_dict:
+            feed_url = self.feeds_url_dict[feed]
+            if feed_url in session_dict["feed_url_names"]:
+                old_feed_name = session_dict["feed_url_names"][feed_url]
+                if feed != old_feed_name:
+                    self.change_feed_name_session_dict(session_dict, old_feed_name, feed)
+            session_dict["feed_url_names"][feed_url] = feed
+            received_entries = preprocess_rss_feed(feed_url)
+            for key, entry in received_entries.iteritems():
+                if feed not in session_dict["preferences"][self.home]:
+                    session_dict["preferences"][self.home][feed] = {}
+                if key not in session_dict["seen_entries_keys"]:
+                    session_dict["preferences"][self.home][feed][key] = entry
+                session_dict["seen_entries_keys"][key] = 1
+            self.predict_entries_in_dict(session_dict["preferences"][self.home][feed])
+        self.filter_url_feeds(session_dict)
+        self.filter_previous_session_file_after_config_update(session_dict)            
+        self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
+        session_dict.close()
+
+    def filter_url_feeds(self, session_dict):
+        feeds_url_config = [url for key,url in self.feeds_url_dict.iteritems()]
+        for url in session_dict["feed_url_names"].keys():
+            if url not in feeds_url_config:
+                session_dict["feed_url_names"].pop(url)
+
+    def initialize_shelve_structure(self,session_dict):
         if "preferences" not in session_dict:
             session_dict["preferences"] = {}
         if "seen_entries_keys" not in session_dict:
             session_dict["seen_entries_keys"] = {}
+        if "feed_url_names" not in session_dict:
+            session_dict["feed_url_names"] = {}
         if self.like not in session_dict["preferences"]:
             session_dict["preferences"][self.like] = {}
         if self.home not in session_dict["preferences"]:
             session_dict["preferences"][self.home] = {}
-        self.filter_previous_session_file_after_config_update(session_dict)
-        self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
-        #import ipdb; ipdb.set_trace()
 
-        for feed in self.feeds_url_dict:
-            received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
-            # BUG!
-            # if I have received news from Nature then renamed Nature->Natr
-            # it will disappear from menu
-            for key, entry in received_entries.iteritems():
-                if key not in session_dict["seen_entries_keys"]:
-                    if feed not in session_dict["preferences"][self.home]:
-                        session_dict["preferences"][self.home][feed] = {}
-                    session_dict["preferences"][self.home][feed][key] = entry
-                session_dict["seen_entries_keys"][key] = 1
-        for feed in session_dict["preferences"][self.home]:
-            self.predict_entries_in_dict(session_dict["preferences"][self.home][feed])
-        self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
-        session_dict.close()
+    def change_feed_name_session_dict(self, session_dict, old_name, new_name):
+        if old_name in session_dict["preferences"][self.home]:
+            session_dict["preferences"][self.home][new_name] = session_dict["preferences"][self.home].pop(old_name)
+        if old_name in session_dict["preferences"][self.like]:
+            session_dict["preferences"][self.like][new_name] = session_dict["preferences"][self.like].pop(old_name)
 
     def initialize_each_seen_entry_as_useless(self, seen_entries_keys):
         """
