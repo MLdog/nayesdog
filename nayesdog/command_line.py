@@ -21,8 +21,6 @@ def main():
     if not args.no_browser:
         webbrowser.open('http://{}:{}'.format(*pars['server_address']))
 
-    import ipdb; ipdb.set_trace()
-
     run(**pars)
     #run()
 

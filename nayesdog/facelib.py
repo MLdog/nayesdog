@@ -411,7 +411,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
 
     def __init__(self, *args):
         BaseHTTPRequestHandler.__init__(self, *args)
-        self.ML = NaiveBayes()
 
     def generate_header(self, list_rss_feeds):
         """
