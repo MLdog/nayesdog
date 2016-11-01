@@ -550,6 +550,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     entry = session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                     x = tranform_feed_entry_to_bag_of_words(entry)
                     self.server.nayesdog.fit(x, 0)
+                    session_dict.close()
                 if preference in ["Delete"]:
                     session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
                 if preference == "Save":
