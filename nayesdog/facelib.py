@@ -765,8 +765,13 @@ class HTTPServerFeeds(HTTPServer):
             session_dict["preferences"][self.home] = {}
         self.filter_previous_session_file_after_config_update(session_dict)
         self.initialize_each_seen_entry_as_useless(session_dict["seen_entries_keys"])
+        #import ipdb; ipdb.set_trace()
+
         for feed in self.feeds_url_dict:
             received_entries = preprocess_rss_feed(self.feeds_url_dict[feed])
+            # BUG!
+            # if I have received news from Nature then renamed Nature->Natr
+            # it will disappear from menu
             for key, entry in received_entries.iteritems():
                 if key not in session_dict["seen_entries_keys"]:
                     if feed not in session_dict["preferences"][self.home]:
