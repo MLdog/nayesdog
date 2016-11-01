@@ -16,7 +16,7 @@ feeds_url_dict = {
 } 
 word_counts_database_file = DEFAULTCONFIGPATH + '/tables.py.gz'
 previous_session_database_file = DEFAULTCONFIGPATH + '/previous_session'
-maximal_number_of_entries_in_memory = 300
+maximal_number_of_entries_in_memory = 2000
 
 server_address = ('127.0.0.1', 8081)
 cssfile = get_name_in_library('css.css')

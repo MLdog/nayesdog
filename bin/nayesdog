@@ -3,6 +3,11 @@
 # Commandline tool
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no-browser', default=False, type=bool, help='Do not open web interface in browser')
+    parser.add_argument('--config', type=str, default='', help='Use alternative config folder')
+    args = parser.parse_args()
     import os
     import sys
     import webbrowser
@@ -14,14 +19,11 @@ if __name__ == '__main__':
     #    pars = {k:v for k,v in pars.items() if k in list_of_user_parameters}
     #    return pars
     #pars = get_pars()
-    exec(make_me_config())
-    if '--help' in sys.argv or '-h' in sys.argv:
-        print('''
-    --help or =h to print this help
-    --no-browser to not run web interface at {}:{}
-    '''.format(*server_address))
-        sys.exit()
-    if '--no-browser' not in sys.argv:
+    if args.config != '' and os.path.isfile(args.config):
+        exec(make_me_config(file_path=args.config))
+    else:
+        exec(make_me_config())
+    if not args.no_browser:
         webbrowser.open('http://{}:{}'.format(*server_address))
     #run(**pars)
     run()
