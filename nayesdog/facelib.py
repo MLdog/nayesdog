@@ -130,7 +130,7 @@ def preprocess_rss_feed(url):
     return entries
 
 # old version of like-dislike
-def generate_radio(var_name, value):
+def generate_radio(var_name, value, txt):
     """
     Generate HTML code to create a radio
     :param var_name: Variable name.
