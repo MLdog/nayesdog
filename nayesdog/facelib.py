@@ -422,7 +422,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         html_table_row = ""
         for feed in list_rss_feeds:
-            menu_element = generate_link(feed, feed)
+            menu_element = generate_link(feed, self.server.correct_feed_name_to_text(feed))
             if feed == self.server.current_preference_folder or feed == self.server.feed_chosen:
                 menu_element = to_span("selected_link", menu_element)
             else:
@@ -447,7 +447,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         """
         dropdown = generate_input_text("text","Search..","myInput","filterFunction()")
         for feed in list_rss_feeds:
-            menu_element = generate_link(feed, feed)
+            menu_element = generate_link(feed, self.server.correct_feed_name_to_text(feed))
             dropdown += menu_element
         dropdown = to_div("dropdown-content",dropdown,"myDropdown")
         button = generate_html_button("myFunction()","dropbtn","News")
@@ -670,7 +670,7 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.wfile.write(feeds_menu)
             self.wfile.write(to_header(1,current_preference))
             feed_chosen = self.server.feed_chosen
-            self.wfile.write(to_header(2,feed_chosen))
+            self.wfile.write(to_header(2,self.server.correct_feed_name_to_text(feed_chosen)))
             self.wfile.write(self.generate_entry_separator())
             session_dict.close()
             if "Train" in self.path:
@@ -688,13 +688,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     self.wfile.write(rss_entry)
                     if self.server.current_preference_folder == self.server.home:
                         self.wfile.write(self.generate_like_options(id_entry,
-                                                                    anchor,
-                                                                    "get"))
+                                                                    anchor))
                     else:
                         self.wfile.write(self.generate_save_delete_option(
                                                                  id_entry,
-                                                                 anchor,
-                                                                 "get"))
+                                                                 anchor))
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
         return
@@ -737,7 +735,7 @@ class HTTPServerFeeds(HTTPServer):
         self.home = "Home"
         self.like = "Like"
         self.cssfile = cssfile
-        self.feeds_url_dict = feeds_url_dict
+        self.feeds_url_dict = self.correct_names_feed_url_dict(feeds_url_dict)
         self.previous_session = previous_session
         self.current_preference_folder = self.home
         self.feed_chosen = ""
@@ -746,6 +744,13 @@ class HTTPServerFeeds(HTTPServer):
                                           stopwords_file,
                                           maximal_number_of_entries)
         self.update_session()
+
+    def correct_names_feed_url_dict(self, feeds_url_dict):
+        feeds_url_dict_correct = {}
+        for key,url in feeds_url_dict.iteritems():
+            feed_name = self.correct_feed_name(key)
+            feeds_url_dict_correct[feed_name] = url
+        return feeds_url_dict_correct
 
     def update_session(self):
         """
@@ -849,6 +854,16 @@ class HTTPServerFeeds(HTTPServer):
             for kfeed in session_dict['preferences'][k].keys():
                 if kfeed not in self.feeds_url_dict.keys():
                     session_dict['preferences'][k].pop(kfeed)
+
+    def correct_feed_name(self,name):
+        correct_name = name.split()
+        correct_name = "%20".join(correct_name)
+        return correct_name
+
+    def correct_feed_name_to_text(self,name):
+        correct_name = name.split("%20")
+        correct_name = " ".join(correct_name)
+        return correct_name
 
 def run(server_address=None,
         cssfile=None,
