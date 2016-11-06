@@ -119,8 +119,6 @@ a{
 
 .like_option{
     color : black;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 .like_option a{
     color:transparent;
@@ -132,8 +130,6 @@ a{
 
 .dislike_option{
     color : black;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 .dislike_option a{
     color:transparent;
@@ -148,8 +144,6 @@ a{
     position: fixed;
     margin-left: -150px;
     margin-top: 400px;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 .toggle_images a{
     /*color:gray;*/
@@ -173,8 +167,6 @@ a{
     position: fixed;
     margin-left: -150px;
     margin-top: 330px;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 .train a{
     /*color:gray;*/
@@ -223,24 +215,18 @@ a{
     position: fixed;
     margin-left: -150px;
     margin-top: 80px;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 
 .Likemenu {
     position: fixed;
     margin-left: -150px;
     margin-top: 150px;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
 }
 
 .dropbtn {
     /*background-image:url('/icons/menu.png');*/
     background-image:url('/icons/news.png');
     background-color: transparent;
-    -webkit-filter: opacity(50%);
-    filter: opacity(50%);
     color: transparent;
     background-repeat: no-repeat;
     padding: 10px;

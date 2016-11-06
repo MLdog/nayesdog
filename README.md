@@ -29,7 +29,12 @@ pip install nayesdog
 You can import the `nayesdog` library into python projects with `import nayesdog`
 
 ## To-do
+* In Like and Home add dropdown menus and add a category for all.
+* Upload last version Pypi
+* Parse HTML (One more dependency)
+* Summarization: https://github.com/neopunisher/Open-Text-Summarizer
+* Topic modeling and word search according to topic distance and likability
+* Visual search of documents ordered by topics
 * Test and spot bugs
 * replace shelves for cross-compatibility (?)
 * being able to enter feed names that contain spaces!
-* summarization: https://github.com/neopunisher/Open-Text-Summarizer
