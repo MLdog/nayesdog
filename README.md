@@ -5,6 +5,7 @@ RSS reader with Naive Bayes powered recommendations
 - doglib.py is preprocessing lib.
 - naylib.py is ML lib.
 - facelib.py is web interface lib.
+
 ---
 
 ## Dependencies:
