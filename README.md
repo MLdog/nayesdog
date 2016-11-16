@@ -36,7 +36,7 @@ pip install git+https://github.com/MLdog/nayesdog
 You can import the `nayesdog` library into python projects with `import nayesdog`
 
 ## To-do
-* In Like and Home add dropdown menus and add a category for all.
+* Save the last feed open and the last folder open
 * Upload last version Pypi
 * Parse HTML (One more dependency)
 * Summarization: https://github.com/neopunisher/Open-Text-Summarizer

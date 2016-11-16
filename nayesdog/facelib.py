@@ -62,15 +62,17 @@ page_head_tpl = """
           images[i].style.display = style;
       }
   }
-  function myFunction() {
-    document.getElementById("myDropdown").classList.toggle("show");
+  function myFunctionHome() {
+    document.getElementById("myDropdownHome").classList.toggle("show");
   }
-
-  function filterFunction() {
+  function myFunctionLike() {
+    document.getElementById("myDropdownLike").classList.toggle("show");
+  }
+  function filterFunctionHome() {
     var input, filter, ul, li, a, i;
-    input = document.getElementById("myInput");
+    input = document.getElementById("myInputHome");
     filter = input.value.toUpperCase();
-    div = document.getElementById("myDropdown");
+    div = document.getElementById("myDropdownHome");
     a = div.getElementsByTagName("a");
     for (i = 0; i < a.length; i++) {
         if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
@@ -78,6 +80,42 @@ page_head_tpl = """
         } else {
             a[i].style.display = "none";
         }
+    }
+  }
+  function filterFunctionLike() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("myInputLike");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("myDropdownLike");
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
+    }
+  }
+  window.onclick = function(e) {
+    if (!e.target.matches('.Home')) {
+  
+      var dropdowns = document.getElementsByClassName("dropdownHome-content");
+      for (var d = 0; d < dropdowns.length; d++) {
+        var openDropdown = dropdowns[d];
+        if (openDropdown.classList.contains('show')) {
+          openDropdown.classList.remove('show');
+        }
+      }
+    }
+    if (!e.target.matches('.Like')) {
+  
+      var dropdowns = document.getElementsByClassName("dropdownLike-content");
+      for (var d = 0; d < dropdowns.length; d++) {
+        var openDropdown = dropdowns[d];
+        if (openDropdown.classList.contains('show')) {
+          openDropdown.classList.remove('show');
+        }
+      }
     }
   }
   </script>
@@ -437,7 +475,15 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         menu += to_span("menu_bar_separator", generate_horizontal_rule())
         return menu
 
-    def generate_feeds_menu(self, list_rss_feeds):
+    def generate_feeds_menu(self,
+                            list_rss_feeds,
+                            drop_button_name,
+                            drop_button_text,
+                            div_name,
+                            button_function,
+                            dropdown_ID,
+                            filter_function,
+                            input_name):
         """
         Generate Feeds side menu
         :param list_rss_feeds: List of RSS feeds titles
@@ -445,14 +491,15 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code for feeds menu
         :rtype: String
         """
-        dropdown = generate_input_text("text","Search..","myInput","filterFunction()")
+        dropdown = generate_input_text("text","Search..",input_name,filter_function)
+        feed_name = drop_button_name
         for feed in list_rss_feeds:
-            menu_element = generate_link(feed, self.server.correct_feed_name_to_text(feed))
+            menu_element = generate_link("/" + feed_name+"/"+feed, self.server.correct_feed_name_to_text(feed))
             dropdown += menu_element
-        dropdown = to_div("dropdown-content",dropdown,"myDropdown")
-        button = generate_html_button("myFunction()","dropbtn","News")
+        dropdown = to_div(div_name+"-content",dropdown,dropdown_ID)
+        button = generate_html_button(button_function,drop_button_name,drop_button_text)
         menu = button + dropdown
-        menu = to_div("dropdown",menu)
+        menu = to_div(div_name,menu)
         return menu
 
     def generate_save_delete_option(self,
@@ -499,15 +546,21 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         s = like_link + dislike_link
         return s
 
-    def extract_chosen_feed_from_path(self):
+    def extract_chosen_preference_and_feed_from_path(self):
         """
         Extract the desired RSS feed from the path
         :returns: Chosen feed.
         :rtype: String.
         """
-        feed_chosen = self.path.split("/")[-1]
-        feed_chosen = feed_chosen.split("?")[0]
-        return feed_chosen
+        splitted_path = self.path.split("/")
+        if len(splitted_path) >= 2:
+            preference = splitted_path[-2]
+            feed_chosen = self.path.split("/")[-1]
+            feed_chosen = feed_chosen.split("?")[0]
+        else:
+            preference = self.path.split("/")[-1]
+            feed_chosen = ""
+        return preference,feed_chosen
 
     def extract_query_components(self):
         """ 
@@ -591,13 +644,13 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         Updates the values for server.feed_chosen or server.current_preference_folder
         according to the values of the path
         """
-        folder = self.extract_chosen_feed_from_path()
+        preference,feed = self.extract_chosen_preference_and_feed_from_path()
         session_dict = shelve(self.server.previous_session)
-        if folder in session_dict["preferences"].keys():
-            self.server.current_preference_folder = folder
+        if preference in session_dict["preferences"].keys():
+            self.server.current_preference_folder = preference
             self.server.feed_chosen = ""
-        elif folder in self.server.feeds_url_dict.keys():
-            self.server.feed_chosen = folder
+        if feed in self.server.feeds_url_dict.keys():
+            self.server.feed_chosen = feed
         session_dict.close()
 
     def get_closest_element_anchor(self, keys, key_id, feed_chosen):
@@ -641,20 +694,34 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(page_head_tpl)
-            self.wfile.write('''<body>''')
+            self.wfile.write('<body>\n')
             # Generate preferences menu
             session_dict = shelve(self.server.previous_session)
             preference_menu_keys = session_dict["preferences"].keys()
             preference_menu = ""
             for preference in preference_menu_keys:
-                menu_element = generate_link(preference, preference)
+                dict_feeds = session_dict["preferences"][preference]
+                feeds_menu_keys = dict_feeds.keys()
+                menu_element = self.generate_feeds_menu(feeds_menu_keys,
+                                                        drop_button_name=preference,
+                                                        drop_button_text=preference,
+                                                        div_name="dropdown"+preference,
+                                                        button_function="myFunction"+preference+"()",
+                                                        dropdown_ID="myDropdown"+preference,
+                                                        filter_function="filterFunction"+preference+"()",
+                                                        input_name="myInput"+preference)
+                
+                #menu_element = generate_link(preference, preference)
+                """
                 if preference == self.server.current_preference_folder:
                     menu_element = to_span("selected_link", menu_element)
                 else:
                     menu_element = to_span("unselected_link", menu_element)
                 
                 menu_element = to_div(preference+"menu",menu_element)
+                """
                 preference_menu += menu_element
+
             toggle_images_link = generate_link("#", "Toggle images", "javascript:imtoggle()")
             toggle_images_link = to_span("toggle_images", toggle_images_link)
             preference_menu += toggle_images_link
@@ -666,13 +733,14 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             current_preference = self.server.current_preference_folder
             dict_feeds = session_dict["preferences"][current_preference]
             feeds_menu_keys = dict_feeds.keys()
-            feeds_menu = self.generate_feeds_menu(feeds_menu_keys)
-            self.wfile.write(feeds_menu)
+            #feeds_menu = self.generate_feeds_menu(feeds_menu_keys)
+            #self.wfile.write(feeds_menu)
             self.wfile.write(to_header(1,current_preference))
             feed_chosen = self.server.feed_chosen
             self.wfile.write(to_header(2,self.server.correct_feed_name_to_text(feed_chosen)))
             self.wfile.write(self.generate_entry_separator())
             session_dict.close()
+            
             if "Train" in self.path:
                 self.server.update_session()
             if self.server.feed_chosen in feeds_menu_keys:
