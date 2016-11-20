@@ -45,3 +45,4 @@ You can import the `nayesdog` library into python projects with `import nayesdog
 * Test and spot bugs
 * replace shelves for cross-compatibility (?)
 * being able to enter feed names that contain spaces!
+* Move "toggle images" function to config.py instead of having button?
