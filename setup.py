@@ -2,7 +2,7 @@ from setuptools import setup
 setup(
     name = 'nayesdog',
     packages = ['nayesdog'],
-    version = '0.1.2',
+    version = '0.1.3',
     description = 'RSS reader with Naive Bayes powered recommendations',
     author = 'Ilya Prokin, Sergio Peignier',
     author_email = 'isprokin@gmail.com, sergio.peignier.zapata@gmail.com',
