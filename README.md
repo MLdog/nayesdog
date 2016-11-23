@@ -25,12 +25,12 @@ pip install git+https://github.com/MLdog/nayesdog
 ```
 
 ## Usage:
-+ To run `nayesdog` you only need to run `NayesDog` in a terminal
-+ `NayesDog` will create three files in the current directory:
-	+  `user_config.py`: configuration file.  Modify this file to include new RSS feeds or remove the existing ones.
-	+ `tables.py.gz`: The trained model, containing the word counts that are used by the Naive Bayes Classifier. You can copy your model, use it somewhere else and share it.
-	+ `.previous_session`: A hidden shelve file that stores the state of your session. If you have problems, try to erase this file.
-+ By running `NayesDog` with --config option you can have different nayesdogs trained for different purposes and different RSS feeds.
++ To run `nayesdog` you only need to run `nayesdog` in a terminal
+* Default config is stored in `~/.nayesdog`
+	+ `config.py`: configuration file.  Modify this file to include new RSS feeds or remove the existing ones.
+	+ `tables.py.gz`: Trained model, containing the word counts that are used by the Naive Bayes Classifier. You can copy your model, use it somewhere else and share it.
+	+ `.previous_session`: A hidden file that stores the state of your session. If you have problems, try to erase this file.
++ By running `nayesdog` with `--config` option you can have different nayesdogs trained for different purposes and different RSS feeds.
 
 ## Python library:
 You can import the `nayesdog` library into python projects with `import nayesdog`
