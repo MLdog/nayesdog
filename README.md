@@ -46,3 +46,4 @@ You can import the `nayesdog` library into python projects with `import nayesdog
 * replace shelves for cross-compatibility (?)
 * being able to enter feed names that contain spaces!
 * Move "toggle images" function to config.py instead of having button?
+* Should we remove deleted article also from WordCount dict?

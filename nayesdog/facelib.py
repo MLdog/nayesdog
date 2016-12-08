@@ -122,6 +122,24 @@ page_head_tpl = """
 </head>
 """
 
+def generate_an_option(action_name,
+                       var_name,
+                       anchor_to_closest_element):
+    """
+    Generate Save and delete bar option
+    :param action_name: Save/Delete/Otherwise
+    :param var_name: Submit button variable name
+    :param anchor_to_closest_element: Anchor to the closest entry
+    :type action_name: String
+    :type var_name: String
+    :type anchor_to_closest_element: String
+    :returns: HTML code for save and delete bar 
+    :rtype: String
+    """
+    link_text = "/?"+var_name+"="+action_name+anchor_to_closest_element
+    link = generate_link(link_text, action_name)
+    link = to_span(action_name.lower()+"_option", link)
+    return link
 
 def generate_entry_id(id_entry):
     """
@@ -516,13 +534,16 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code for save and delete bar 
         :rtype: String
         """
-        save_link_text = "/?"+var_name+"=Save"+anchor_to_closest_element
-        save_link = generate_link(save_link_text, "Save")
-        save_link = to_span("save_option", save_link)
-        delete_link_text = "/?"+var_name+"=Delete"+anchor_to_closest_element
-        delete_link = generate_link(delete_link_text, "Delete")
-        delete_link = to_span("delete_option", delete_link)
-        s = save_link + delete_link
+        #save_link_text = "/?"+var_name+"=Save"+anchor_to_closest_element
+        #save_link = generate_link(save_link_text, "Save")
+        #save_link = to_span("save_option", save_link)
+        #delete_link_text = "/?"+var_name+"=Delete"+anchor_to_closest_element
+        #delete_link = generate_link(delete_link_text, "Delete")
+        #delete_link = to_span("delete_option", delete_link)
+        #s = save_link + delete_link
+        
+        s = generate_an_option("Save", var_name, anchor_to_closest_element) +\
+            generate_an_option("Delete", var_name, anchor_to_closest_element)
         return s
 
     def generate_like_options(self, 
@@ -537,13 +558,20 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code to generate radio and submit button
         :rtype: String.
         """
-        like_link_text = "/?"+var_name+"=Like"+anchor_to_closest_element
-        like_link = generate_link(like_link_text, "Like")
-        like_link = to_span("like_option", like_link)
-        dislike_link_text = "/?"+var_name+"=Dislike"+anchor_to_closest_element
-        dislike_link = generate_link(dislike_link_text, "Dislike")
-        dislike_link = to_span("dislike_option", dislike_link)
-        s = like_link + dislike_link
+        #like_link_text = "/?"+var_name+"=Like"+anchor_to_closest_element
+        #like_link = generate_link(like_link_text, "Like")
+        #like_link = to_span("like_option", like_link)
+        #dislike_link_text = "/?"+var_name+"=Dislike"+anchor_to_closest_element
+        #dislike_link = generate_link(dislike_link_text, "Dislike")
+        #dislike_link = to_span("dislike_option", dislike_link)
+        #s = like_link + dislike_link
+        s = ''.join(
+                [
+                    generate_an_option(an,
+                        var_name,
+                        anchor_to_closest_element)
+                    for an in ["Like", "Dislike"]
+                ])
         return s
 
     def extract_chosen_preference_and_feed_from_path(self):
@@ -603,10 +631,11 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     session_dict.close()
                 if preference in ["Delete"]:
                     session_dict["preferences"][self.server.current_preference_folder][feed_name].pop(index)
+                    session_dict.close()
                 if preference == "Save":
                     entry = session_dict["preferences"][self.server.current_preference_folder][feed_name][index]
                     file_save = open(feed_name+"_saved_entries.html", "a")
-                    file_save.write(represent_rss_entry(entry,component))
+                    file_save.write(represent_rss_entry(entry, component))
                     file_save.write(self.generate_entry_separator())
                     file_save.close()
             else:
@@ -754,13 +783,15 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                     id_entry = self.generate_id_entry(feed_chosen, key)
                     rss_entry = represent_rss_entry(entry, id_entry)
                     self.wfile.write(rss_entry)
+
+                    opts = self.generate_save_delete_option(id_entry, anchor) # always show save and delete
                     if self.server.current_preference_folder == self.server.home:
-                        self.wfile.write(self.generate_like_options(id_entry,
-                                                                    anchor))
-                    else:
-                        self.wfile.write(self.generate_save_delete_option(
-                                                                 id_entry,
-                                                                 anchor))
+                        # in this case add Like/Dislike
+                        opts = "{1} &nbsp; {0}".format(
+                                opts,
+                                self.generate_like_options(id_entry, anchor)
+                        )
+                    self.wfile.write(opts)
                     self.wfile.write(self.generate_entry_separator())
             self.wfile.write('</body>\n</html>')
         return

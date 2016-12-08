@@ -2,4 +2,5 @@ in qutebrowser menu overlaps with image of cogs.
 
 no delete button
 
+save button is useless
 
