@@ -17,7 +17,7 @@ def get_inside_tag(page, tag='title'):
         return ''
 
 def compose(*functions):
-    return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
+    return lambda x: reduce(lambda v, f: f(v), reversed(functions), x)
 
 #def compose(*funcs):
 #    def f(x):
