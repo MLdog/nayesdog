@@ -16,16 +16,19 @@ def get_inside_tag(page, tag='title'):
     except:
         return ''
 
-def conv(*funcs):
-    def f(x):
-        res = x
-        for arg in funcs[::-1]:
-            res = arg(res)
-        return res
-    return f
+def compose(*functions):
+    return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
+
+#def compose(*funcs):
+#    def f(x):
+#        res = x
+#        for arg in funcs[::-1]:
+#            res = arg(res)
+#        return res
+#    return f
     
 
-get_title = conv(lambda x: x.strip(), get_inside_tag)
+get_title = compose(lambda x: x.strip(), get_inside_tag)
 get_body = partial(get_inside_tag, tag="body")
 
 
