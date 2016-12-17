@@ -27,6 +27,9 @@ import naylib
 import time
 from simpleshelve import SimpleShelve as shelve
 import os
+import sys  
+reload(sys)  
+sys.setdefaultencoding('utf8')
 #from config import make_me_config
 #exec(make_me_config())
 #from config import (

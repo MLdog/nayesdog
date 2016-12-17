@@ -114,13 +114,16 @@ def preprocess_html(url, pattern):
             (
                 generate_entry_id(url).encode('utf-8')
                 ,
-                (lambda x: {
-                    'title'   : get_title(x).encode("utf-8"),
-                    'content' : simplify_html(get_body(x)).encode("utf-8"),
-                    'authors' : ''.encode("utf-8"),
-                    'link'    : ''.encode("utf-8"),
-                    'time'    : str(time.time())
-                })(
+                (lambda x: 
+                    {
+                        'title'   : get_title(x).encode("utf-8"),
+                        'content' : simplify_html(get_body(x))\
+                                .encode("utf-8"),
+                        'authors' : ''.encode("utf-8"),
+                        'link'    : ''.encode("utf-8"),
+                        'time'    : str(time.time())
+                    }
+                )(
                     fetch_page(url)
                 )
             )
