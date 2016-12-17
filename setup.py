@@ -17,6 +17,6 @@ setup(
       [console_scripts]
       nayesdog = nayesdog.command_line:main
     """,
-    install_requires=['feedparser'],
+    install_requires=['feedparser', 'beautifulsoup4'],
     #scripts=['bin/nayesdog'],
 )

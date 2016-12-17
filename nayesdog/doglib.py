@@ -20,6 +20,7 @@ import feedparser
 #from urllib.request import urlopen
 from urllib2 import urlopen
 from functools import partial
+import bs4
 
 
 def fetch_page(url):
@@ -36,12 +37,17 @@ def get_inside_tag(page, tag='title'):
         return ''
 
 
+def get_body(page, func):
+    sp = bs4.BeautifulSoup(page)
+    return str(eval(func))
+
+
 def compose(*functions):
     return lambda x: reduce(lambda v, f: f(v), reversed(functions), x)
 
 
 get_title = compose(lambda x: x.strip(), get_inside_tag)
-get_body = partial(get_inside_tag, tag="body")
+#get_body = partial(get_inside_tag, tag="body")
 
 
 def file_to_str(filepath):
@@ -105,7 +111,7 @@ def nopunctuation(s):
            )
 
 
-def preprocess_html(url, pattern):
+def preprocess_html(url, pattern, func):
     page = fetch_page(url)
     urls_of_items = re.findall(pattern, page)
 
@@ -117,7 +123,7 @@ def preprocess_html(url, pattern):
                 (lambda x: 
                     {
                         'title'   : get_title(x).encode("utf-8"),
-                        'content' : simplify_html(get_body(x))\
+                        'content' : simplify_html(get_body(x, func))\
                                 .encode("utf-8"),
                         'authors' : ''.encode("utf-8"),
                         'link'    : ''.encode("utf-8"),
@@ -175,7 +181,7 @@ def preprocess_feed(url):
         return preprocess_rss_feed(url)
     else:
         if url[0] == 'HTML':
-            return preprocess_html(url[1], url[2])
+            return preprocess_html(url[1], url[2], url[3])
         else:
             raise ValueError
 

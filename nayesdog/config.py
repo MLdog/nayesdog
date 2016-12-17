@@ -17,7 +17,8 @@ feeds_url_dict = {
     'Nature News': (
         'HTML',
         'http://www.nature.com/news/index.html',
-        'https?://[^/]+nature.com/news/[^"]+'
+        'https?://[^/]+nature.com/news/[^"]+',
+        "sp.find('section', attrs={'id': 'article-body'})",
      ),
 } 
 word_counts_database_file = DEFAULTCONFIGPATH + '/tables.py.gz'
