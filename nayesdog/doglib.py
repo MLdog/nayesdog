@@ -25,7 +25,9 @@ import bs4
 def fetch_page(url):
     response = urlopen(url)
     charset = response.headers.getparam('charset')
-    page = response.read().decode(charset)
+    page = response.read()
+    if charset is not None:
+        page = page.decode(charset)
     return page
 
 
@@ -110,9 +112,11 @@ def nopunctuation(s):
            )
 
 
-def preprocess_html(url, pattern, func):
+def preprocess_html(url, pattern, func, prefix=None):
     page = fetch_page(url)
-    urls_of_items = re.findall(pattern, page)
+    urls_of_items = list(set(re.findall(pattern, page)))
+    if prefix is not None:
+        urls_of_items = list(map(lambda url: prefix+url, urls_of_items))
 
     entries = dict(map(
         lambda url:
@@ -175,12 +179,14 @@ def preprocess_rss_feed(url):
     return entries
 
 
-def preprocess_feed(url):
-    if isinstance(url, str):
-        return preprocess_rss_feed(url)
+def preprocess_feed(args):
+    if isinstance(args, str):
+        return preprocess_rss_feed(args)
     else:
-        if url[0] == 'HTML':
-            return preprocess_html(url[1], url[2], url[3])
+        if args[0] == 'HTML':
+            return preprocess_html(args[1], args[2], args[3])
+        elif args[0] == 'HTMLpref':
+            return preprocess_html(args[1], args[2], args[3], prefix=args[4])
         else:
             raise ValueError
 
