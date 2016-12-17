@@ -149,6 +149,7 @@ a{
     /*color:gray;*/
     color:transparent;
     background-image:url('/icons/no_image.png');
+    background-size: 40%;
     padding: 25px;
     background-repeat: no-repeat;
     font-size: 5px;
@@ -157,13 +158,14 @@ a{
     /*color:gray;*/
     color:transparent;
     background-image:url('/icons/image.png');
+    background-size: 40%;
     padding: 25px;
     background-repeat: no-repeat;
     font-size: 5px;
 }
 
 .train {
-    color : black;
+    color:transparent;
     position: fixed;
     margin-left: -150px;
     margin-top: 330px;
@@ -172,6 +174,7 @@ a{
     /*color:gray;*/
     color:transparent;
     background-image:url('/icons/compute.png');
+    background-size: 40%;
     padding: 25px;
     background-repeat: no-repeat;
     font-size: 5px;
