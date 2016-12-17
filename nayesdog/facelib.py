@@ -27,21 +27,10 @@ import naylib
 import time
 from simpleshelve import SimpleShelve as shelve
 import os
-import sys  
-reload(sys)  
+import sys
+reload(sys)
 sys.setdefaultencoding('utf8')
-#from config import make_me_config
-#exec(make_me_config())
-#from config import (
-#        server_address,
-#        cssfile,
-#        feeds_url_dict,
-#        previous_session_database_file,
-#        word_counts_database_file,
-#        maximal_number_of_entries_in_memory,
-#        stopwords_file,
-#        icons_folder
-#        )
+
 page_head_tpl = """
 <!DOCTYPE html><html><head>
   <meta charset="utf-8">
@@ -125,6 +114,7 @@ page_head_tpl = """
 </head>
 """
 
+
 def generate_an_option(action_name,
                        var_name,
                        anchor_to_closest_element):
@@ -144,23 +134,6 @@ def generate_an_option(action_name,
     link = to_span(action_name.lower()+"_option", link)
     return link
 
-
-# old version of like-dislike
-def generate_radio(var_name, value, txt):
-    """
-    Generate HTML code to create a radio
-    :param var_name: Variable name.
-    :param value: Variable value.
-    :param txt: Radio text.
-    :type var_name: String.
-    :type value: String.
-    :type txt: String.
-    :returns: HTML code to create a radio
-    :rtype: String.
-    """
-    s = "<input type=\"radio\" name=\""+var_name
-    s += "\" value=\""+value+"\">"+txt+"\n"
-    return s
 
 def generate_submit_button(var_name, value, image_path):
     """
@@ -379,7 +352,6 @@ def represent_rss_entry(entry, key_entry):
         else:
             s += to_span("title",entry["title"])
     if "authors" in entry:
-        #authors = ", ".join(entry["authors"])
         s += to_span("authors",", ".join(entry["authors"]))
     if "content" in entry:
         s += to_span("content",entry["content"])
@@ -494,14 +466,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code for save and delete bar 
         :rtype: String
         """
-        #save_link_text = "/?"+var_name+"=Save"+anchor_to_closest_element
-        #save_link = generate_link(save_link_text, "Save")
-        #save_link = to_span("save_option", save_link)
-        #delete_link_text = "/?"+var_name+"=Delete"+anchor_to_closest_element
-        #delete_link = generate_link(delete_link_text, "Delete")
-        #delete_link = to_span("delete_option", delete_link)
-        #s = save_link + delete_link
-        
         s = generate_an_option("Save", var_name, anchor_to_closest_element) +\
             generate_an_option("Delete", var_name, anchor_to_closest_element)
         return s
@@ -518,13 +482,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
         :returns: HTML code to generate radio and submit button
         :rtype: String.
         """
-        #like_link_text = "/?"+var_name+"=Like"+anchor_to_closest_element
-        #like_link = generate_link(like_link_text, "Like")
-        #like_link = to_span("like_option", like_link)
-        #dislike_link_text = "/?"+var_name+"=Dislike"+anchor_to_closest_element
-        #dislike_link = generate_link(dislike_link_text, "Dislike")
-        #dislike_link = to_span("dislike_option", dislike_link)
-        #s = like_link + dislike_link
         s = ''.join(
                 [
                     generate_an_option(an,
@@ -700,7 +657,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
                                                         filter_function="filterFunction"+preference+"()",
                                                         input_name="myInput"+preference)
                 
-                #menu_element = generate_link(preference, preference)
                 """
                 if preference == self.server.current_preference_folder:
                     menu_element = to_span("selected_link", menu_element)
@@ -722,8 +678,6 @@ class HTTPServer_RequestHandler_feeds(BaseHTTPRequestHandler):
             current_preference = self.server.current_preference_folder
             dict_feeds = session_dict["preferences"][current_preference]
             feeds_menu_keys = dict_feeds.keys()
-            #feeds_menu = self.generate_feeds_menu(feeds_menu_keys)
-            #self.wfile.write(feeds_menu)
             self.wfile.write(to_header(1,current_preference))
             feed_chosen = self.server.feed_chosen
             self.wfile.write(to_header(2,self.server.correct_feed_name_to_text(feed_chosen)))
@@ -944,6 +898,3 @@ def run(server_address=None,
                             icons_folder)
     print('running server...')
     httpd.serve_forever()
-
-#if __name__ == '__main__':
-#    run()

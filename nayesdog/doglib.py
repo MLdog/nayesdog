@@ -17,7 +17,6 @@ import re
 import time
 import os
 import feedparser
-#from urllib.request import urlopen
 from urllib2 import urlopen
 from functools import partial
 import bs4
@@ -25,7 +24,7 @@ import bs4
 
 def fetch_page(url):
     response = urlopen(url)
-    charset = response.headers.getparam('charset') #response.headers['content-type'].split('charset=')[-1]
+    charset = response.headers.getparam('charset')
     page = response.read().decode(charset)
     return page
 
