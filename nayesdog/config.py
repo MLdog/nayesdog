@@ -14,6 +14,11 @@ feeds_url_dict = {
     'Nature Research': 'http://feeds.nature.com/NatureLatestResearch',
     'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
     'Science': 'http://www.sciencemag.org/rss/current.xml',
+    'Nature News': (
+        'HTML',
+        'http://www.nature.com/news/index.html',
+        'https?://[^/]+nature.com/news/[^"]+'
+     ),
 } 
 word_counts_database_file = DEFAULTCONFIGPATH + '/tables.py.gz'
 previous_session_database_file = DEFAULTCONFIGPATH + '/previous_session'

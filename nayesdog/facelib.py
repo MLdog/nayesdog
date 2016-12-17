@@ -13,14 +13,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public Licensealong with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import feedparser
 import re
 from urlparse import urlparse
 import mimetypes
 from doglib import (
         tranform_feed_entry_to_bag_of_words,
         file_to_str,
-        simplify_html
+        simplify_html,
+        preprocess_feed
         )
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import naylib
@@ -141,49 +141,6 @@ def generate_an_option(action_name,
     link = to_span(action_name.lower()+"_option", link)
     return link
 
-def generate_entry_id(id_entry):
-    """
-    Keeps only letters and number in RSS entry id
-    :param id_entry: RSS entry id
-    :type id_entry: String
-    :returns: Modified RSS entry id
-    :rtype: String
-    """
-    return re.sub('[^a-zA-Z0-9]+', '', id_entry)
-
-
-def preprocess_rss_feed(url):
-    """
-    Preprocess RSS feed and only keeps the most important elements for each entry, i.e.,
-    the title, content, author, link and id
-    :param url: RSS feed url
-    :type: String
-    :returns: Dictionnary of most important entry elements
-    :rtype: Dict
-    """
-    feed_parsed = feedparser.parse(url)
-    entries = {}
-    for entry in feed_parsed['entries']:
-        entry_dic = {"title": "",
-                     "content": "",
-                     "authors": "",
-                     "link": "",
-                     "time": str(time.time())}
-        if "title" in entry:
-            entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
-        if "content" in entry:
-            entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
-        elif "summary" in entry:
-            entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
-        else:
-            print entry.keys()
-        if "author" in entry:
-            entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
-        if "link" in entry:
-            entry_dic["link"] = entry["link"].encode('utf-8')
-        if "id" in entry.keys():
-            entries[generate_entry_id(entry["id"]).encode('utf-8')] = entry_dic
-    return entries
 
 # old version of like-dislike
 def generate_radio(var_name, value, txt):
@@ -865,7 +822,7 @@ class HTTPServerFeeds(HTTPServer):
                 if feed != old_feed_name:
                     self.change_feed_name_session_dict(session_dict, old_feed_name, feed)
             session_dict["feed_url_names"][feed_url] = feed
-            received_entries = preprocess_rss_feed(feed_url)
+            received_entries = preprocess_feed(feed_url)
             for key, entry in received_entries.iteritems():
                 if feed not in session_dict["preferences"][self.home]:
                     session_dict["preferences"][self.home][feed] = {}
@@ -874,7 +831,7 @@ class HTTPServerFeeds(HTTPServer):
                 session_dict["seen_entries_keys"][key] = 1
             self.predict_entries_in_dict(session_dict["preferences"][self.home][feed])
         self.filter_url_feeds(session_dict)
-        self.filter_previous_session_file_after_config_update(session_dict)            
+        self.filter_previous_session_file_after_config_update(session_dict)
         self.prune_useless_stored_entries_keys(session_dict["seen_entries_keys"])
         session_dict.close()
 
@@ -884,7 +841,7 @@ class HTTPServerFeeds(HTTPServer):
             if url not in feeds_url_config:
                 session_dict["feed_url_names"].pop(url)
 
-    def initialize_shelve_structure(self,session_dict):
+    def initialize_shelve_structure(self, session_dict):
         if "preferences" not in session_dict:
             session_dict["preferences"] = {}
         if "seen_entries_keys" not in session_dict:

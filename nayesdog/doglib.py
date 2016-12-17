@@ -16,35 +16,49 @@ You should have received a copy of the GNU General Public Licensealong with this
 import re
 import time
 import os
+import feedparser
+#from urllib.request import urlopen
+from urllib2 import urlopen
+from functools import partial
 
-#remove this function
-def dargmax(d, vmax0=-1):
-    vmax = vmax0
-    kmax = 0
-    for k,v in d.items():
-        if v > vmax:
-            vmax = v
-            kmax = k
-    return kmax
 
-#remove this function
-def classnamer(k):
-    return {0:"dislike", 1:"like"}.get(k, "dont know if you like")
+def fetch_page(url):
+    response = urlopen(url)
+    charset = response.headers.getparam('charset') #response.headers['content-type'].split('charset=')[-1]
+    page = response.read().decode(charset)
+    return page
 
-#remove this funciton
-def print_sorted(d, indent=0, s="  "):
-    for k in sorted(d.keys()):
-        print("{}{}".format(s*indent, k))
-        if type(d[k]) == dict:
-            print_sorted(d[k], indent=indent+1)
-        else:
-            print("{}{}".format(s*(indent+1), d[k]))
 
-#remove this function
+def get_inside_tag(page, tag='title'):
+    try:
+        return page.split('<{}>'.format(tag))[1].split('</{}>'.format(tag))[0]
+    except:
+        return ''
+
+
+def compose(*functions):
+    return lambda x: reduce(lambda v, f: f(v), reversed(functions), x)
+
+
+get_title = compose(lambda x: x.strip(), get_inside_tag)
+get_body = partial(get_inside_tag, tag="body")
+
+
 def file_to_str(filepath):
     with open(filepath, 'r') as f:
         s = f.read()
     return s
+
+
+def generate_entry_id(id_entry):
+    """
+    Keeps only letters and number in RSS entry id
+    :param id_entry: RSS entry id
+    :type id_entry: String
+    :returns: Modified RSS entry id
+    :rtype: String
+    """
+    return re.sub('[^a-zA-Z0-9]+', '', id_entry)
 
 
 def simplify_html(s):
@@ -63,6 +77,7 @@ def simplify_html(s):
         s = re.sub('<{tag}[^>]*>'.format(tag=tag), '', s)
         s = re.sub('</{tag}[^>]*>'.format(tag=tag), '', s)
     return s
+
 
 def notags(s):
     """
@@ -90,178 +105,77 @@ def nopunctuation(s):
            )
 
 
-def to_readable_md(e):
-    """
-    Converts RSS entry into readable String in markdown format
-    :param e: RSS entry
-    :type e: dict
-    :returns: String in markdown format
-    :rtype: String
-    """
-    try:
-        s = ''
-        s += '# ' + e['title'].strip() + '\n\n'
-        if 'authors' in e.keys():
-            s += '## ' + ', '.join(list(map(lambda x: x['name'], e['authors']))) + '\n\n'
-        if 'content' in e.keys():
-            s += notags(e['content'][0]['value']).replace('\n', ' ').strip() + '\n\n'
-        s += e['id']
-        s = re.sub(' +', ' ', s)
-        return s
-    except:
-        return ''
+def preprocess_html(url, pattern):
+    page = fetch_page(url)
+    urls_of_items = re.findall(pattern, page)
 
-
-def feed_to_md_file(d, fpath):
-    """
-    Converts each entry of RSS feed parsed into readable Strings in markdown
-    format and writes them in a file.
-    :param d: RSS feed parsed 
-    :param fpath: File path
-    :type d: dict
-    :type fpath: string
-    """
-    #mds = [s for s in map(to_readable_md, d['entries']) if s != '']
-    mds = list(filter(lambda s: s != '', map(to_readable_md, d['entries'])))
-    md = '\n\n-------------\n\n'.join(mds)
-    md = '# ' + d['feed']['title'] + '\n\n' + re.sub('([#]+)', r'\1#', md)
-    with open(fpath, 'w') as f:
-        f.write(md)
-
-
-def rating_from_md_file(mdfile):
-    """
-    Reads user-entered rating from mdfile.
-    To rate news item, edit mdfile directly: add rating after id separated by
-    one space character.
-    E.g.:
-    Before edit:
-        https://arstechnica.com/?p=972521
-    After edit:
-        https://arstechnica.com/?p=972521 0
-    :param mdfile: Full path to markdown file
-    :type mdfile: string
-    :returns: Dict with ids of feeds as keys and ratings as values
-    :rtype: dict
-    """
-    mds = file_to_str(mdfile).split('\n\n-------------\n\n')
-    id_rating = map(
-        lambda md:
-            (lambda x:
-                (x[0], None) if len(x)==1 else (x[0], int(x[1]))
-            )(md.split('\n')[-1].split(' '))
-        ,
-        mds
-       )
-    return dict(id_rating)
-
-
-def rating_from_md_files_in_folder(mdfolder):
-    """Extract ratings from .md files in mdfolder. Applies rating_from_md_file
-    to each file in mdfolder.
-    :param mdfolder: Path to folder
-    :type mdfolder: string
-    :returns: Dict with ids of feeds as keys and ratings as values (combined
-    for all files)
-    :rtype: dict
-    """
-    mdfiles = list(filter(lambda s: s[0] != '.' and s[-3:] == '.md', os.listdir(mdfolder)))
-    fullpaths = map(lambda x: os.path.join(mdfolder, x), mdfiles)
-    items_combined = sum(map(lambda x: list(rating_from_md_file(x).items()), fullpaths), [])
-    return dict(filter(lambda x: x[1] != None, items_combined))
-
-
-def process_an_entry(e):
-    """
-    Process an RSS entry and outputs a dictionary with the time stamp, the  title, the content
-    (both transformed into bag of lowercase words) and the authors (if it
-    exists)
-    :param e: RSS entry
-    :type e: dict
-    :returns: Important elements in RSS entry
-    :rtype: dict
-    """
-    l =  [time.time()]
-    # transform title and content to bag of lowercase words
-    l += list(
-            map(
-                lambda s:
-                    nopunctuation(
-                        notags(s).replace('\n', ' ').replace(u'\xa0', ' ')
-                    ).strip().lower().split(' ')
+    entries = dict(map(
+        lambda url:
+            (
+                generate_entry_id(url).encode('utf-8')
                 ,
-                [
-                    e['title'],
-                    e['content'][0]['value'] if 'content' in e.keys() else ''
-                ]
+                (lambda x: {
+                    'title'   : get_title(x).encode("utf-8"),
+                    'content' : simplify_html(get_body(x)).encode("utf-8"),
+                    'authors' : ''.encode("utf-8"),
+                    'link'    : ''.encode("utf-8"),
+                    'time'    : str(time.time())
+                })(
+                    fetch_page(url)
+                )
             )
-         )
-    l += [e['id']]
-    # give names to items
-    l = dict(
-            zip(
-                ['timestamp', 'title', 'content', 'id']
-                ,
-                l
-            )
-        )
-    # add authors if any
-    if 'authors' in e.keys():
-        l['authors'] = list(map(lambda x: x['name'], e['authors']))
-    return l
+            ,
+            urls_of_items
+        ))
 
-#should remove this function
-def process_sergios_entry(e, index):
+    return entries
+
+
+def preprocess_rss_feed(url):
     """
-    Process an RSS entry and list of words for training
+    Preprocess RSS feed and only keeps the most important elements for each entry, i.e.,
+    the title, content, author, link and id
+    :param url: RSS feed url
+    :type: String
+    :returns: Dictionnary of most important entry elements
+    :rtype: Dict
     """
-    # transform title and content to bag of lowercase words
+    feed_parsed = feedparser.parse(url)
+    entries = {}
+    for entry in feed_parsed['entries']:
+        entry_dic = {
+            "title": "",
+            "content": "",
+            "authors": "",
+            "link": "",
+            "time": str(time.time())
+        }
+        if "title" in entry:
+            entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
+        if "content" in entry:
+            entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
+        elif "summary" in entry:
+            entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
+        else:
+            print entry.keys()
+        if "author" in entry:
+            entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
+        if "link" in entry:
+            entry_dic["link"] = entry["link"].encode('utf-8')
+        if "id" in entry.keys():
+            entries[generate_entry_id(entry["id"]).encode('utf-8')] = entry_dic
+    return entries
 
-    l = sum(list(
-            map(
-                lambda s:
-                    nopunctuation(
-                        notags(s).replace('\n', ' ').replace(u'\xa0', ' ')
-                    ).strip().lower().split(' ')
-                ,
-                [
-                    e['title'],
-                    e['content']
-                ]
-            )
-         ), [])
-    # add authors if any
-    if 'authors' in e.keys():
-        l += e['authors']
-    return {index:l}
 
-#should remove this function
-def transform_feed_dict(d):
-    # load simplified entries
-    entries = list(map(process_an_entry, d['entries']))
+def preprocess_feed(url):
+    if isinstance(url, str):
+        return preprocess_rss_feed(url)
+    else:
+        if url[0] == 'HTML':
+            return preprocess_html(url[1], url[2])
+        else:
+            raise ValueError
 
-    # get ids
-    ids = [e['id'] for e in entries]
-
-    # throw away timestamps and ids
-    for e in entries:
-        e.pop('timestamp')
-        e.pop('id')
-
-    # title and text combined
-    txts = map(
-                lambda e: 
-                    list(filter(
-                        lambda s: s != '', # if content is absent
-                        sum(e.values(), [])
-                    ))
-                ,
-                entries
-              )
-
-#    txts = list(txts)
-
-    return dict(zip(ids, txts))
 
 def html_to_bag_of_words(html_code):
     """
