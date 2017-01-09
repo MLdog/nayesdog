@@ -23,11 +23,17 @@ import bs4
 
 
 def fetch_page(url):
-    response = urlopen(url)
-    charset = response.headers.getparam('charset')
-    page = response.read()
-    if charset is not None:
-        page = page.decode(charset)
+    print(url)
+    try:
+        response = urlopen(url)
+        charset = response.headers.getparam('charset')
+        page = response.read()
+        if charset is not None:
+            page = page.decode(charset)
+        print("...Loaded")
+    except:
+        page = ''
+        print("...Failed")
     return page
 
 
@@ -97,6 +103,10 @@ def notags(s):
     return re.sub('<[^>]+>', '', s)
 
 
+def clean_up_url(url):
+    return url.split('#')[0]
+
+
 def nopunctuation(s):
     """
     Removes punctuation from string
@@ -114,6 +124,8 @@ def nopunctuation(s):
 
 def preprocess_html(url, pattern, func, prefix=None):
     page = fetch_page(url)
+    if page == '':
+        return {}
     urls_of_items = list(set(re.findall(pattern, page)))
     if prefix is not None:
         urls_of_items = list(map(lambda url: prefix+url, urls_of_items))
@@ -131,14 +143,16 @@ def preprocess_html(url, pattern, func, prefix=None):
                         'authors' : ''.encode("utf-8"),
                         'link'    : ''.encode("utf-8"),
                         'time'    : str(time.time())
-                    }
+                    } if x != '' else None
                 )(
-                    fetch_page(url)
+                    fetch_page(clean_up_url(url))
                 )
             )
             ,
             urls_of_items
         ))
+
+    entries = {k:v for k,v in entries.items() if v != None}
 
     return entries
 
@@ -169,7 +183,7 @@ def preprocess_rss_feed(url):
         elif "summary" in entry:
             entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
         else:
-            print entry.keys()
+            print(entry.keys())
         if "author" in entry:
             entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
         if "link" in entry:
