@@ -11,17 +11,24 @@ default_config = """
 from nayesdog.config import get_name_in_library, DEFAULTCONFIGPATH 
 
 feeds_url_dict = {
-    'Nature Research': 'http://feeds.nature.com/NatureLatestResearch',
+    'Nature Research': 'http://feeds.nature.com/NatureLatestResearch', # Link to RSS
     'Arstechnica': 'http://feeds.arstechnica.com/arstechnica/science',
-    'Science': 'http://www.sciencemag.org/rss/current.xml',
+    'Science': (
+        'HTML',                                                        # Use HTML parser instead of RSS, 
+        'http://www.sciencemag.org/news',                              # URL with links to news items, MASTER page
+        '/news/[0-9]{4}/[0-9]{1,2}/[^"]+',                             # RegEx for links to news items, SLAVE pages
+        "sp.find('article', attrs={'class': 'primary--content'})",     # At a SLAVE page, which HTML element contains useful content
+        'http://www.sciencemag.org',                                   # Prefix to prepend to each paresed link from MASTER page
+     ),
     'Nature News': (
         'HTML',
         'http://www.nature.com/news/index.html',
         'https?://[^/]+nature.com/news/[^"]+',
         "sp.find('section', attrs={'id': 'article-body'})",
+        '',                                                            # Here prefix is not needed as parsed SLAVE URLs are already an absolute URLs
      ),
     'MIT Technology Review': (
-        'HTMLpref',
+        'HTML',
         'https://www.technologyreview.com/daily/',
         '/s/[^/]+/[^"]+',
         "sp.find('div', attrs={'class': 'article-body__content'})",

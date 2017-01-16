@@ -198,9 +198,10 @@ def preprocess_feed(args):
         return preprocess_rss_feed(args)
     else:
         if args[0] == 'HTML':
-            return preprocess_html(args[1], args[2], args[3])
-        elif args[0] == 'HTMLpref':
             return preprocess_html(args[1], args[2], args[3], prefix=args[4])
+        #    return preprocess_html(args[1], args[2], args[3])
+        #elif args[0] == 'HTMLpref':
+        #    return preprocess_html(args[1], args[2], args[3], prefix=args[4])
         else:
             raise ValueError
 

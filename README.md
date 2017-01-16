@@ -36,6 +36,8 @@ pip install git+https://github.com/MLdog/nayesdog
 You can import the `nayesdog` library into python projects with `import nayesdog`
 
 ## To-do
+* Each time nayesdog is run, preprocess_html loads all urls even they were previously loaded. This unnecessry work and resulting delays should be avoided.
+* Add UI toggle for showing titles only / full content / summarized content
 * Save the last feed open and the last folder open
 * Upload last version Pypi
 * Parse HTML (One more dependency)
