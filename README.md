@@ -1,5 +1,5 @@
 # NayesDog
-RSS reader with Naive Bayes powered recommendations
+RSS/Web news reader with Naive Bayes powered recommendations
 
 ---
 - doglib.py is preprocessing lib.
@@ -9,34 +9,37 @@ RSS reader with Naive Bayes powered recommendations
 ---
 
 ## Dependencies:
-[feedparser](https://pypi.python.org/pypi/feedparser)
+[feedparser](https://pypi.python.org/pypi/feedparser) for RSS
+[beautifulsoup4](https://pypi.python.org/pypi/beautifulsoup4) for web scraping
 
 ## Installation:
-To install latest release:
+To install latest release (pip of python2.7, pip2 on my system):
 
 ``` {.sh}
-pip install nayesdog
+pip2 install nayesdog
 ```
 
 To install development version:
 
 ``` {.sh}
-pip install git+https://github.com/MLdog/nayesdog
+pip2 install git+https://github.com/MLdog/nayesdog
 ```
 
 ## Usage:
 + To run `nayesdog` you only need to run `nayesdog` in a terminal
-* Default config is stored in `~/.nayesdog`
-	+ `config.py`: configuration file.  Modify this file to include new RSS feeds or remove the existing ones.
+* Default config files are stored in `~/.nayesdog`
+	+ `config.py`: configuration file.  Modify this file to include new RSS feeds or web scrap news, or remove the existing ones.
 	+ `tables.py.gz`: Trained model, containing the word counts that are used by the Naive Bayes Classifier. You can copy your model, use it somewhere else and share it.
 	+ `.previous_session`: A hidden file that stores the state of your session. If you have problems, try to erase this file.
 + By running `nayesdog` with `--config` option you can have different nayesdogs trained for different purposes and different RSS feeds.
 
-## Python library:
-You can import the `nayesdog` library into python projects with `import nayesdog`
+Example configuration can be found at <https://github.com/iprokin/dotfiles/tree/master/.nayesdog>.
 
-## To-do
-* Each time nayesdog is run, preprocess_html loads all urls even they were previously loaded. This unnecessry work and resulting delays should be avoided.
+## Python library:
+You can import the `nayesdog` library into python2.7 projects with `import nayesdog`
+
+# To-do
+* Each time nayesdog is run, preprocess_html loads all urls even they were previously loaded. This unnecessary work and resulting delays should be avoided.
 * Add UI toggle for showing titles only / full content / summarized content
 * Save the last feed open and the last folder open
 * Upload last version Pypi
