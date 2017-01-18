@@ -1,1 +1,0 @@
-in qutebrowser menu overlaps with image of cogs.

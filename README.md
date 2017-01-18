@@ -40,6 +40,7 @@ You can import the `nayesdog` library into python2.7 projects with `import nayes
 
 # To-do
 * Each time nayesdog is run, preprocess_html loads all urls even they were previously loaded. This unnecessary work and resulting delays should be avoided.
+* Make dropdown menu to lie above "Toggle images" and "Train" buttons.
 * Add UI toggle for showing titles only / full content / summarized content
 * Save the last feed open and the last folder open
 * Upload last version Pypi
