@@ -1,6 +1,8 @@
 # NayesDog
 RSS/Web news reader with Naive Bayes powered recommendations
 
+![](screenshot.png)
+
 ---
 - doglib.py is preprocessing lib.
 - naylib.py is ML lib.
