@@ -169,27 +169,30 @@ def preprocess_rss_feed(url):
     feed_parsed = feedparser.parse(url)
     entries = {}
     for entry in feed_parsed['entries']:
-        entry_dic = {
-            "title": "",
-            "content": "",
-            "authors": "",
-            "link": "",
-            "time": str(time.time())
-        }
-        if "title" in entry:
-            entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
-        if "content" in entry:
-            entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
-        elif "summary" in entry:
-            entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
-        else:
-            print(entry.keys())
-        if "author" in entry:
-            entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
-        if "link" in entry:
-            entry_dic["link"] = entry["link"].encode('utf-8')
-        if "id" in entry.keys():
-            entries[generate_entry_id(entry["id"]).encode('utf-8')] = entry_dic
+        try:
+            entry_dic = {
+                "title": "",
+                "content": "",
+                "authors": "",
+                "link": "",
+                "time": str(time.time())
+            }
+            if "title" in entry:
+                entry_dic["title"] = simplify_html(entry["title"]).encode('utf-8')
+            if "content" in entry:
+                entry_dic["content"] = simplify_html(entry["content"][0]["value"]).encode('utf-8')
+            elif "summary" in entry:
+                entry_dic["content"] = simplify_html(entry["summary"]).encode('utf-8')
+            else:
+                print(entry.keys())
+            if "author" in entry:
+                entry_dic["authors"] = [author["name"].encode('utf-8') for author in entry["authors"]]
+            if "link" in entry:
+                entry_dic["link"] = entry["link"].encode('utf-8')
+            if "id" in entry.keys():
+                entries[generate_entry_id(entry["id"]).encode('utf-8')] = entry_dic
+        except:
+            pass
     return entries
 
 
